@@ -11,14 +11,17 @@ UTC_NOW = functools.partial(datetime.datetime.now, datetime.timezone.utc)
 
 
 class DateTimeMixin(pydantic.BaseModel):
-    created_at: datetime.datetime = pydantic.Field(default_factory=UTC_NOW)
-    updated_at: datetime.datetime = pydantic.Field(default_factory=UTC_NOW)
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
     @pydantic.field_validator("created_at", "updated_at", mode="before")
     @classmethod
-    def validate_(cls, value: datetime.datetime) -> datetime.datetime:
-        if not isinstance(value, datetime.datetime):
-            raise TypeError(strings_error.INVALID_VALUE % value)
-        if value.tzinfo is None:
-            value = value.replace(tzinfo=datetime.timezone.utc)
+    def validate_(cls, value: datetime.datetime | None) -> datetime.datetime:
+        match value:
+            case None:
+                value = UTC_NOW()
+            case datetime.datetime() if value.tzinfo is None:
+                value = value.replace(tzinfo=datetime.timezone.utc)
+            case _:
+                raise ValueError(strings_error.INVALID_VALUE % value)
         return value
