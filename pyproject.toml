@@ -11,13 +11,25 @@ pydantic = "^2.6.1"
 pydantic-settings = "^2.2.0"
 
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.2.2"
+pytest = "^8.0.1"
+coverage = "^7.4.1"
+mypy = "^1.8.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 79
-lint.select = [
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+exclude = ["tests"]
+select = [
     "A",
     "B",
     "F",
@@ -59,7 +71,7 @@ lint.select = [
     "UP",
     "YTT",
 ]
-lint.ignore = [
+ignore = [
     "ANN001",
     "ANN101",
     "ANN102",
