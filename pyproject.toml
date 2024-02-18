@@ -1,0 +1,72 @@
+[tool.poetry]
+name = "currency-convert"
+version = "0.1.0"
+description = ""
+authors = ["Markus Iorio <mbalzert@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.6.1"
+pydantic-settings = "^2.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 79
+lint.select = [
+    "A",
+    "B",
+    "F",
+    "G",
+    "I",
+    "N",
+    "Q",
+    "S",
+    "W",
+    "ANN",
+    "ARG",
+    "BLE",
+    "COM",
+    "DJ",
+    "DTZ",
+    "EM",
+    "ERA",
+    "EXE",
+    "FBT",
+    "ICN",
+    "INP",
+    "ISC",
+    "NPY",
+    "PD",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLF",
+    "TCH",
+    "TID",
+    "TRY",
+    "UP",
+    "YTT",
+]
+lint.ignore = [
+    "ANN001",
+    "ANN101",
+    "ANN102",
+    "D211",
+    "D212",
+    "D107",
+    "Q000",
+    "COM812",
+    "ISC001",
+]
