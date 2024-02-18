@@ -1,9 +1,11 @@
 import datetime
 import typing
 
-from currency_convert.core.domain.currency.code import CurrencyCode
 from currency_convert.core.domain.shared.entity import Entity
 from currency_convert.core.domain.shared.mixin import DateTimeMixin
+from currency_convert.core.domain.shared.value_objects.currency_code import (
+    CurrencyCode,
+)
 
 
 class Currency(Entity, DateTimeMixin):
