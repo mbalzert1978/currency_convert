@@ -4,15 +4,12 @@ import typing
 import pydantic
 
 from currency_convert.core.domain.shared.domain_event import DomainEvent
-from currency_convert.core.domain.shared.value_objects.uuidid import (
-    UUIDID,
-)
+from currency_convert.core.domain.shared.mixin import IDMixin
 
 TV = typing.TypeVar("TV")
 
 
-class Entity(pydantic.BaseModel, abc.ABC):
-    id_: UUIDID = pydantic.Field(default_factory=UUIDID.create)
+class Entity(IDMixin, abc.ABC):
     domain_events: list[DomainEvent] = pydantic.Field(
         default_factory=list,
         init=False,
