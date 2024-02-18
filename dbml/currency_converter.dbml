@@ -1,0 +1,23 @@
+Table currency {
+  id integer [primary key]
+  code varchar
+  name varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table rate {
+  id integer [primary key]
+  agency integer [ref: > agency.id]
+  to_currecy integer [ref: > currency.code]
+  rate integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table agency {
+  id integer [primary key]
+  base_currency integer [ref: > currency.code]
+  created_at timestamp
+  updated_at timestamp
+}
