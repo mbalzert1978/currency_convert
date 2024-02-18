@@ -1,3 +1,4 @@
+import datetime
 import typing
 
 from currency_convert.core.domain.currency.code import CurrencyCode
@@ -10,6 +11,17 @@ class Currency(Entity, DateTimeMixin):
     name: str
 
     @classmethod
-    def create(cls, code: str, name: str) -> typing.Self:
+    def create(
+        cls,
+        code: str,
+        name: str,
+        created_at: datetime.datetime | None = None,
+        updated_at: datetime.datetime | None = None,
+    ) -> typing.Self:
         value = CurrencyCode.create(code)
-        return cls(code=value, name=name)
+        return cls(
+            code=value,
+            name=name,
+            created_at=created_at,
+            updated_at=updated_at,
+        )
