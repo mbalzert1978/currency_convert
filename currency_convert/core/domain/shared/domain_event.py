@@ -1,8 +1,5 @@
-import dataclasses
-
-# TODO use pydantic
+from currency_convert.core.domain.shared.mixin import IDMixin, TimestampMixin
 
 
-@dataclasses.dataclass
-class DomainEvent:
+class DomainEvent(IDMixin, TimestampMixin):
     ...
