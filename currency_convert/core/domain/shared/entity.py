@@ -16,9 +16,10 @@ class Entity(IDMixin, abc.ABC):
     )
 
     def __eq__(self, __value: object) -> bool:
-        if isinstance(__value, type(self)):
-            return self.id_.value == __value.id_.value
-        return False
+        return (
+            isinstance(__value, type(self))
+            and self.id_.value == __value.id_.value
+        )
 
     def send(self, domain_event: DomainEvent) -> None:
         self.domain_events.append(domain_event)

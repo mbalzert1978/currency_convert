@@ -10,6 +10,4 @@ class ValueObject(pydantic.BaseModel, typing.Generic[TV]):
     value: TV
 
     def __eq__(self, __value: object) -> bool:
-        if isinstance(__value, type(self)):
-            return self.value == __value.value
-        return False
+        return isinstance(__value, type(self)) and self.value == __value.value
