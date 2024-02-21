@@ -11,7 +11,7 @@ class UnwrapFailedError(CurrencyConverterError):
     """Unwrap failed error."""
 
 
-
+@typing.runtime_checkable
 class Result(typing.Protocol[_T_co, _E_co]):
     __slots__ = ("_inner_value",)
 
