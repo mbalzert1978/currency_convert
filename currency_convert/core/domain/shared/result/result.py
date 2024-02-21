@@ -23,6 +23,15 @@ class Result(typing.Protocol[_T_co, _E_co]):
     def __init__(self, inner_value: _T_co | _E_co) -> None:
         self._inner_value = inner_value
 
+    def __eq__(self, __value: object) -> bool:
+        return (
+            isinstance(__value, type(self))
+            and self._inner_value == __value._inner_value
+        )
+
+    def __ne__(self, __value: object) -> bool:
+        return not (self == __value)
+
     def value_or(
         self,
         default_value: _T_new,
@@ -95,7 +104,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
     def from_failure(
         cls,
         inner_value: _E_co | _T_co,
-    ) -> "Result[typing.Any, Exception]":
+    ) -> "Result[typing.Any, _E_co]":
         """
         One more value to create failure unit values.
 
@@ -138,6 +147,15 @@ class Success(Result[_T_co, typing.Any]):
     __slots__ = ("_inner_value",)
     __match_args__ = ("_inner_value",)
 
+    def __iter__(self) -> typing.Iterator[_T_co]:
+        yield self._inner_value
+
+    def __repr__(self) -> str:
+        return f"Success({self._inner_value!r})"
+
+    def __hash__(self) -> int:
+        return hash((True, self._inner_value))
+
     def __init__(self, inner_value: _T_co) -> None:
         super().__init__(inner_value)
 
@@ -161,6 +179,20 @@ class Success(Result[_T_co, typing.Any]):
 class Failure(Result[typing.Any, _E_co]):
     __slots__ = ("_inner_value",)
     __match_args__ = ("_inner_value",)
+
+    def __iter__(self) -> typing.Iterator[typing.NoReturn]:
+        def _iter() -> typing.Iterator[typing.NoReturn]:
+            # Exception will be raised when the iterator is advanced, not when it's created
+            raise UnwrapFailedError(self)
+            yield  # This yield will never be reached, but is necessary to create a generator
+
+        return _iter()
+
+    def __repr__(self) -> str:
+        return f"Failure({self._inner_value!r})"
+
+    def __hash__(self) -> int:
+        return hash((False, self._inner_value))
 
     def __init__(self, inner_value: _E_co) -> None:
         super().__init__(inner_value)
