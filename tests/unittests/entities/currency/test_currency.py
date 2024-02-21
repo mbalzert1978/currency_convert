@@ -10,8 +10,12 @@ from currency_convert.core.domain.shared.value_objects.uuidid import (
 )
 
 
-def test_create() -> None:
-    c = Currency.create("USD", "US Dollar")
+def test_create_success() -> None:
+    result = Currency.create("USD", "US Dollar")
+
+    assert result.is_success()
+
+    c = result.unwrap()
 
     assert isinstance(c.code, CurrencyCode)
     assert isinstance(c.id_, UUIDID)
@@ -22,3 +26,9 @@ def test_create() -> None:
     assert c.code.value == "USD"
     assert c.created_at.tzinfo == datetime.timezone.utc
     assert c.updated_at.tzinfo == datetime.timezone.utc
+
+
+def test_create_failure_to_long() -> None:
+    result = Currency.create("US Dollar", "US Dollar")
+
+    assert result.is_failure()
