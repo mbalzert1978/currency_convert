@@ -64,3 +64,31 @@ def test_slots() -> None:
         o.some_arbitrary_attribute = 1  # type: ignore[attr-defined]
     with pytest.raises(AttributeError):
         n.some_arbitrary_attribute = 1  # type: ignore[attr-defined]
+
+
+def test_equality() -> None:
+    assert Success(1) == Success(1)
+    assert Failure(1) == Failure(1)
+    assert Success(1) != Failure(1)
+    assert Success(1) != Success(2)
+    assert Failure(1) != Failure(2)
+    assert not (Success(1) != Success(1))
+    assert Success(1) != "abc"
+    assert Success("0") != Success(0)
+
+
+def test_hash() -> None:
+    assert len({Success(1), Failure("2"), Success(1), Failure("2")}) == 2
+    assert len({Success(1), Success(2)}) == 2
+    assert len({Success("a"), Failure("a")}) == 2
+
+
+def test_repr() -> None:
+    o = Success(123)
+    n = Failure(-1)
+
+    assert repr(o) == "Success(123)"
+    assert o == eval(repr(o))
+
+    assert repr(n) == "Failure(-1)"
+    assert n == eval(repr(n))
