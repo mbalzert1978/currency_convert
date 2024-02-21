@@ -15,7 +15,7 @@ class Agency(Entity, DateTimeMixin):
     residing_country: Country
 
     @classmethod
-    def create(
+    def create(  # noqa: PLR0913
         cls,
         name: str,
         base_currency: CurrencyCode,
