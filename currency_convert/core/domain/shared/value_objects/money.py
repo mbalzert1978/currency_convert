@@ -4,7 +4,6 @@ import typing
 import pydantic
 
 from currency_convert.core.domain.resources import strings_error
-from currency_convert.core.domain.shared.result.result import Result
 from currency_convert.core.domain.shared.value_objects.value_object import (
     ValueObject,
 )
@@ -21,17 +20,12 @@ class Money(ValueObject[decimal.Decimal]):
 
     @pydantic.field_validator("value", mode="after")
     @classmethod
-    def validate_(cls, value: _DecimalNew) -> decimal.Decimal:
+    def quantize(cls, value: _DecimalNew) -> decimal.Decimal:
         try:
             return decimal.Decimal(value).quantize(PRECISION).copy_abs()
         except decimal.InvalidOperation as exc:
             raise ValueError(strings_error.INVALID_VALUE % value) from exc
 
     @classmethod
-    def create(
-        cls, value: _DecimalNew = DEFAULT
-    ) -> Result[typing.Self, pydantic.ValidationError]:
-        try:
-            return Result.from_value(cls(value=value))
-        except pydantic.ValidationError as exc:
-            return Result.from_failure(exc)
+    def create(cls, value: _DecimalNew = DEFAULT) -> typing.Self:
+        return cls(value=value)

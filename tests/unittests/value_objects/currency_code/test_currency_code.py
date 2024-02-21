@@ -1,7 +1,6 @@
 import pydantic
 import pytest
 
-from currency_convert.core.domain.shared.result.result import Result
 from currency_convert.core.domain.shared.value_objects.currency_code import (
     CurrencyCode,
 )
@@ -32,7 +31,7 @@ def test_create_fn_default_value() -> None:
     expected = "EUR"
 
     # Act
-    result = CurrencyCode.create().unwrap()
+    result = CurrencyCode.create()
 
     # Assert
     assert result == CurrencyCode(value=expected)
@@ -43,7 +42,7 @@ def test_create_fn_success() -> None:
     expected = "USD"
 
     # Act
-    result = CurrencyCode.create(value=expected).unwrap()
+    result = CurrencyCode.create(value=expected)
 
     # Assert
     assert result == CurrencyCode(value=expected)
@@ -51,10 +50,10 @@ def test_create_fn_success() -> None:
 
 def test_create_invalid_currency_code() -> None:
     with pytest.raises(pydantic.ValidationError):
-        CurrencyCode.create("To_long").unwrap()
+        CurrencyCode.create("To_long")
 
     with pytest.raises(pydantic.ValidationError):
-        CurrencyCode.create("sh").unwrap()
+        CurrencyCode.create("sh")
 
     with pytest.raises(pydantic.ValidationError):
-        CurrencyCode.create(53).unwrap()
+        CurrencyCode.create(53)

@@ -8,7 +8,7 @@ from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 
 def test_create_uuidid_using_create_default() -> None:
     # Arrange / Act
-    id_ = UUIDID.create().unwrap()
+    id_ = UUIDID.create()
 
     # Assert
     assert isinstance(id_, UUIDID)
@@ -20,7 +20,7 @@ def test_create_uuidid_using_create_value() -> None:
     expected = "test_space"
 
     # Act
-    id_ = UUIDID.create(expected).unwrap()
+    id_ = UUIDID.create(expected)
 
     # Assert
     assert isinstance(id_, UUIDID)
@@ -29,7 +29,7 @@ def test_create_uuidid_using_create_value() -> None:
 
 def test_imutability() -> None:
     # Arrange
-    id_ = UUIDID.create().unwrap()
+    id_ = UUIDID.create()
 
     # Act / Assert
     with pytest.raises(pydantic.ValidationError, match="frozen"):

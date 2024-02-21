@@ -3,9 +3,6 @@ from __future__ import annotations
 import typing
 import uuid
 
-import pydantic
-
-from currency_convert.core.domain.shared.result.result import Result
 from currency_convert.core.domain.shared.value_objects.value_object import (
     ValueObject,
 )
@@ -19,19 +16,14 @@ class UUIDID(ValueObject[TV | uuid.UUID]):
 
     @typing.overload
     @classmethod
-    def create(cls, value: TV) -> Result[UUIDID[TV], pydantic.ValidationError]:
+    def create(cls, value: TV) -> UUIDID[TV]:
         ...
 
     @typing.overload
     @classmethod
-    def create(cls) -> Result[UUIDID[uuid.UUID], pydantic.ValidationError]:
+    def create(cls) -> UUIDID[uuid.UUID]:
         ...
 
     @classmethod
-    def create(
-        cls, value: TV | None = None
-    ) -> Result[UUIDID[uuid.UUID] | UUIDID[TV], pydantic.ValidationError]:
-        try:
-            return Result.from_value(cls(value=value or DEFAULT_FN()))
-        except pydantic.ValidationError as exc:
-            return Result.from_failure(exc)
+    def create(cls, value: TV | None = None) -> UUIDID[uuid.UUID] | UUIDID[TV]:
+        return cls(value=value or DEFAULT_FN())

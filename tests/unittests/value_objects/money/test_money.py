@@ -15,7 +15,7 @@ def test_create_valid_money() -> None:
     expected = decimal.Decimal(value).quantize(PRECISION)
 
     # Act
-    money = Money.create(value).unwrap()
+    money = Money.create(value)
 
     # Assert
     assert isinstance(money, Money)
@@ -24,15 +24,15 @@ def test_create_valid_money() -> None:
 
 def test_create_invalid_money() -> None:
     with pytest.raises(pydantic.ValidationError):
-        Money.create("bad").unwrap()
+        Money.create("bad")
 
     with pytest.raises(pydantic.ValidationError):
-        Money.create(list).unwrap()
+        Money.create(list)
 
 
 def test_imutability() -> None:
     # Arrange
-    money = Money.create().unwrap()
+    money = Money.create()
 
     # Act / Assert
     with pytest.raises(pydantic.ValidationError, match="frozen"):
