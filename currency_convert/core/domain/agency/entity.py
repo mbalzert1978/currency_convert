@@ -18,15 +18,15 @@ class Agency(Entity, DateTimeMixin):
     def create(
         cls,
         name: str,
-        base_currency: str,
-        residing_country: str,
+        base_currency: CurrencyCode,
+        residing_country: Country,
         created_at: datetime.datetime | None = None,
         updated_at: datetime.datetime | None = None,
     ) -> typing.Self:
         return cls(
             name=name,
-            base_currency=CurrencyCode.create(base_currency),
-            residing_country=Country.create(residing_country),
+            base_currency=base_currency,
+            residing_country=residing_country,
             created_at=created_at,
             updated_at=updated_at,
         )
