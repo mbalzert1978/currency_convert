@@ -5,7 +5,7 @@ import pydantic
 
 from currency_convert.core.domain.shared.entity import Entity
 from currency_convert.core.domain.shared.mixin import DateTimeMixin
-from currency_convert.core.domain.shared.result.result import Result, Success
+from currency_convert.core.domain.shared.result.result import Result
 from currency_convert.core.domain.shared.value_objects.currency_code import (
     CurrencyCode,
 )
@@ -25,7 +25,7 @@ class Currency(Entity, DateTimeMixin):
     ) -> Result[typing.Self, pydantic.ValidationError]:
         if (cc_result := CurrencyCode.create(code)).is_failure():
             return Result.from_failure(cc_result)
-        return Success(
+        return Result.from_value(
             cls(
                 name=name,
                 code=cc_result.unwrap(),
