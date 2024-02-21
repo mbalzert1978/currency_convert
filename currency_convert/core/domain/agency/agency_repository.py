@@ -12,13 +12,13 @@ class IAgencyRepository(typing.Protocol):
 
     def __exit__(
         self,
-        __exc_type: typing.Optional[type[BaseException]],
-        __exc_value: typing.Optional[BaseException],
-        __traceback: typing.Optional[types.TracebackType],
-    ) -> Result[typing.Optional[bool], Error]:
+        __exc_type: type[BaseException] | None = None,
+        __exc_value: BaseException | None = None,
+        __traceback: types.TracebackType | None = None,
+    ) -> Result[bool | None, Error]:
         ...
 
-    def find_by_name(self, name: str) -> Result[typing.Optional[Agency], Error]:
+    def find_by_name(self, name: str) -> Result[Agency | None, Error]:
         ...
 
     def add(self, agency: Agency) -> Result[None, Error]:
