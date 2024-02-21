@@ -23,6 +23,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 79
+extend-exclude = ["tests"]
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -83,3 +84,4 @@ ignore = [
     "COM812",
     "ISC001",
 ]
+
