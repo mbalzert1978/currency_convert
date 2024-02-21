@@ -22,7 +22,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-line-length = 79
+line-length = 119
 extend-exclude = ["tests"]
 
 [tool.ruff.format]
