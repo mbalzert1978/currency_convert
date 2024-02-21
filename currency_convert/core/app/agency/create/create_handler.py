@@ -30,11 +30,13 @@ class CreateAgencyCommandHandler(
                     detail=EXIST_MSG % cmd.name,
                 )
             )
+
         into_db = Agency.create(
             name=cmd.name,
             base_currency=cmd.base_currency,
             residing_country=cmd.residing_country,
         )
+
         with self._agency_repository as repo:
             db_result = repo.add(into_db)
 
