@@ -197,12 +197,12 @@ class Failure(Result[typing.Any, _E_co]):
     def __init__(self, inner_value: _E_co) -> None:
         super().__init__(inner_value)
 
-    def unwrap(self) -> _E_co:
+    def unwrap(self) -> typing.NoReturn:
         match self._inner_value:
             case Exception():
-                UnwrapFailedError.from_exception(self._inner_value)
+                raise self._inner_value
             case _:
-                UnwrapFailedError.from_exception(Exception(self))
+                raise UnwrapFailedError(self)
 
     def value_or(self, default_value: _T_new) -> _T_new:
         return default_value
