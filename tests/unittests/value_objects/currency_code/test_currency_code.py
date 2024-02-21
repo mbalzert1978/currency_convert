@@ -27,27 +27,15 @@ def test_imutability() -> None:
         code.value = "new"
 
 
-def test_create_fn_returns_result() -> None:
-    # Arrange
-    expected = "USD"
-
-    # Act
-    result = CurrencyCode.create(value=expected)
-
-    # Assert
-    assert isinstance(result, Result)
-
-
 def test_create_fn_default_value() -> None:
     # Arrange
     expected = "EUR"
 
     # Act
-    result = CurrencyCode.create()
+    result = CurrencyCode.create().unwrap()
 
     # Assert
-    assert result.is_success()
-    assert result.unwrap() == CurrencyCode(value=expected)
+    assert result == CurrencyCode(value=expected)
 
 
 def test_create_fn_success() -> None:
@@ -55,26 +43,18 @@ def test_create_fn_success() -> None:
     expected = "USD"
 
     # Act
-    result = CurrencyCode.create(value=expected)
+    result = CurrencyCode.create(value=expected).unwrap()
 
     # Assert
-    assert result.is_success()
-    assert result.unwrap() == CurrencyCode(value=expected)
+    assert result == CurrencyCode(value=expected)
 
 
 def test_create_invalid_currency_code() -> None:
-    result = CurrencyCode.create("To_long")
-
-    assert result.is_failure()
     with pytest.raises(pydantic.ValidationError):
-        result.unwrap()
-    result = CurrencyCode.create("sh")
+        CurrencyCode.create("To_long").unwrap()
 
-    assert result.is_failure()
     with pytest.raises(pydantic.ValidationError):
-        result.unwrap()
-    result = CurrencyCode.create(53)
+        CurrencyCode.create("sh").unwrap()
 
-    assert result.is_failure()
     with pytest.raises(pydantic.ValidationError):
-        result.unwrap()
+        CurrencyCode.create(53).unwrap()
