@@ -33,4 +33,4 @@ class TimestampMixin(pydantic.BaseModel):
 
 
 class IDMixin(pydantic.BaseModel):
-    id_: UUIDID = pydantic.Field(default_factory=UUIDID.create)
+    id_: UUIDID = pydantic.Field(default_factory=UUIDID.create().unwrap)
