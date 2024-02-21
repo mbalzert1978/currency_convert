@@ -10,9 +10,6 @@ _T_new = typing.TypeVar("_T_new")
 class UnwrapFailedError(CurrencyConverterError):
     """Unwrap failed error."""
 
-    @classmethod
-    def from_exception(cls, exc: Exception) -> typing.NoReturn:
-        raise cls from exc
 
 
 class Result(typing.Protocol[_T_co, _E_co]):
