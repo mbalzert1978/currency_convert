@@ -27,6 +27,7 @@ line-length = 79
 [tool.ruff.format]
 docstring-code-format = true
 
+
 [tool.ruff.lint]
 exclude = ["tests"]
 select = [
