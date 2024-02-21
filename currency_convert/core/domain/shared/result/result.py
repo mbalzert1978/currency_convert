@@ -21,10 +21,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         self._inner_value = inner_value
 
     def __eq__(self, __value: object) -> bool:
-        return (
-            isinstance(__value, type(self))
-            and self._inner_value == __value._inner_value
-        )
+        return isinstance(__value, type(self)) and self._inner_value == __value._inner_value
 
     def __ne__(self, __value: object) -> bool:
         return not (self == __value)

@@ -17,8 +17,4 @@ class Rate(Entity, DateTimeMixin):
         created_at: datetime.datetime | None = None,
         updated_at: datetime.datetime | None = None,
     ) -> typing.Self:
-        return cls(
-            rate=Money.create(rate),
-            created_at=created_at,
-            updated_at=updated_at,
-        )
+        return cls(rate=Money.create(rate), created_at=created_at, updated_at=updated_at)

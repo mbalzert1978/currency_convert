@@ -1,8 +1,6 @@
 import typing
 
-from currency_convert.core.domain.shared.value_objects.value_object import (
-    ValueObject,
-)
+from currency_convert.core.domain.shared.value_objects.value_object import ValueObject
 
 DEFAULT = "Brussels"
 

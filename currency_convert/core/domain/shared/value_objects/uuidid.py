@@ -3,9 +3,7 @@ from __future__ import annotations
 import typing
 import uuid
 
-from currency_convert.core.domain.shared.value_objects.value_object import (
-    ValueObject,
-)
+from currency_convert.core.domain.shared.value_objects.value_object import ValueObject
 
 TV = typing.TypeVar("TV", bound=typing.Any)
 DEFAULT_FN = uuid.uuid4

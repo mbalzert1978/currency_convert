@@ -18,9 +18,7 @@ class IAgencyRepository(typing.Protocol):
     ) -> Result[typing.Optional[bool], Error]:
         ...
 
-    def find_by_name(
-        self, name: str
-    ) -> Result[typing.Optional[Agency], Error]:
+    def find_by_name(self, name: str) -> Result[typing.Optional[Agency], Error]:
         ...
 
     def add(self, agency: Agency) -> Result[None, Error]:

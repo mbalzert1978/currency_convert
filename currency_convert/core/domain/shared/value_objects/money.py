@@ -4,15 +4,11 @@ import typing
 import pydantic
 
 from currency_convert.core.domain.resources import strings_error
-from currency_convert.core.domain.shared.value_objects.value_object import (
-    ValueObject,
-)
+from currency_convert.core.domain.shared.value_objects.value_object import ValueObject
 
 PRECISION = decimal.Decimal(10) ** -8
 DEFAULT = decimal.Decimal(0)
-_DecimalNew: typing.TypeAlias = (
-    decimal.Decimal | float | str | tuple[int, typing.Sequence[int], int]
-)
+_DecimalNew: typing.TypeAlias = decimal.Decimal | float | str | tuple[int, typing.Sequence[int], int]
 
 
 class Money(ValueObject[decimal.Decimal]):

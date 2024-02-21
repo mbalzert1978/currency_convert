@@ -2,9 +2,7 @@ import typing
 
 import pydantic
 
-from currency_convert.core.domain.shared.value_objects.value_object import (
-    ValueObject,
-)
+from currency_convert.core.domain.shared.value_objects.value_object import ValueObject
 
 CODE_LEN = 3
 DEFAULT = "EUR"
