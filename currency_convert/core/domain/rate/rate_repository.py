@@ -1,12 +1,12 @@
 import types
 import typing
 
-from currency_convert.core.domain.agency.entity import Agency
+from currency_convert.core.domain.rate.entity import Rate
 from currency_convert.core.domain.shared.error import Error
 from currency_convert.core.domain.shared.result.result import Result
 
 
-class IAgencyRepository(typing.Protocol):
+class IRateRepository(typing.Protocol):
     def __enter__(self) -> typing.Self:
         ...
 
@@ -18,11 +18,8 @@ class IAgencyRepository(typing.Protocol):
     ) -> Result[bool | None, Error]:
         ...
 
-    def find_by_name(self, name: str) -> Result[Agency | None, Error]:
+    def add(self, rate: Rate) -> Result[None, Error]:
         ...
 
-    def add(self, agency: Agency) -> Result[None, Error]:
-        ...
-
-    def update(self, agency: Agency) -> Result[None, Error]:
+    def add_many(self, rates: typing.Sequence[Rate]) -> Result[None, Error]:
         ...
