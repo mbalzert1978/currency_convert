@@ -1,20 +1,29 @@
 import datetime
-import decimal
 import typing
 
 from currency_convert.core.domain.shared.entity import Entity
-from currency_convert.core.domain.shared.mixin import DateTimeMixin
+from currency_convert.core.domain.shared.mixin import CreatedAtMixin
+from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
 from currency_convert.core.domain.shared.value_objects.money import Money
+from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 
 
-class Rate(Entity, DateTimeMixin):
+class Rate(Entity, CreatedAtMixin):
+    agency_id: UUIDID
+    to_currency: CurrencyCode
     rate: Money
 
     @classmethod
     def create(
         cls,
-        rate: decimal.Decimal,
+        agency_id: UUIDID,
+        to_currency: CurrencyCode,
+        rate: Money,
         created_at: datetime.datetime | None = None,
-        updated_at: datetime.datetime | None = None,
     ) -> typing.Self:
-        return cls(rate=Money.create(rate), created_at=created_at, updated_at=updated_at)
+        return cls(
+            agency_id=agency_id,
+            to_currency=to_currency,
+            rate=rate,
+            created_at=created_at,
+        )
