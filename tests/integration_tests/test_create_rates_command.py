@@ -10,12 +10,12 @@ from currency_convert.core.domain.rate.entity import Rate
 from currency_convert.core.domain.shared.value_objects.country import Country
 from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
 from currency_convert.core.domain.shared.value_objects.money import Money
-from tests.test_repositories.fake_repository import TestRepository
+from tests.test_repositories.fake_repository import FakeRepository
 
 
 @pytest.fixture()
-def insert_agency() -> TestRepository[Agency]:
-    repo = TestRepository[Agency]()
+def insert_agency() -> FakeRepository[Agency]:
+    repo = FakeRepository[Agency]()
     CreateAgencyHandler(repo).handle(
         CreateAgency(
             name="test_agency",
@@ -26,7 +26,7 @@ def insert_agency() -> TestRepository[Agency]:
     return repo
 
 
-def test_rates_can_be_created_from_command_handler(insert_agency: TestRepository[Agency]) -> None:
+def test_rates_can_be_created_from_command_handler(insert_agency: FakeRepository[Agency]) -> None:
     # Arrange
     currency_codes = ("USD", "JPY", "HRK", "PHP", "ADJ", "BOA", "TET")
     agency = insert_agency._get_first_entity()
@@ -44,7 +44,7 @@ def test_rates_can_be_created_from_command_handler(insert_agency: TestRepository
             for _ in range(5)
         ],
     )
-    r_repo = TestRepository[Rate]()
+    r_repo = FakeRepository[Rate]()
     handler = CreateRatesHandler(insert_agency, r_repo)
 
     # Act

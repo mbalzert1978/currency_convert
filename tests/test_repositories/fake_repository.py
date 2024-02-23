@@ -9,7 +9,7 @@ from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 ModelType = typing.TypeVar("ModelType", bound=Entity)
 
 
-class TestRepository(typing.Generic[ModelType]):
+class FakeRepository(typing.Generic[ModelType]):
     def __init__(self) -> types.NoneType:
         self._entities: set[ModelType] = set()
 
