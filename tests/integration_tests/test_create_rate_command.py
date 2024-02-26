@@ -9,7 +9,7 @@ from currency_convert.core.domain.rate.entity import Rate
 from currency_convert.core.domain.shared.value_objects.country import Country
 from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
 from currency_convert.core.domain.shared.value_objects.money import Money
-from tests.test_repositories.fake_repository import FakeRepository
+from tests.helper.fake_repository import FakeRepository
 
 
 @pytest.fixture()
