@@ -15,7 +15,7 @@ class IRateRepository(typing.Protocol):
         __exc_type: type[BaseException] | None = None,
         __exc_value: BaseException | None = None,
         __traceback: types.TracebackType | None = None,
-    ) -> Result[bool | None, Error]:
+    ) -> None:
         ...
 
     def add(self, rate: Rate) -> Result[None, Error]:
