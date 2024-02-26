@@ -14,7 +14,10 @@ class CreateAgencyHandler(CommandHandler[CreateAgency, Result[None, Error]]):
         self._agency_repository = agency_repository
 
     def handle(self, cmd: CreateAgency) -> Result[None, Error]:
-        if self._agency_repository.find_by_name(cmd.name).is_success():
+        with self._agency_repository as repo:
+            get_result = repo.find_by_name(cmd.name)
+
+        if get_result.is_success() and get_result.unwrap().is_some():
             return Result.from_failure(AgencyAllreadExistsError(409, detail=EXIST_MSG % cmd.name))
 
         into_db = Agency.create(
@@ -26,6 +29,4 @@ class CreateAgencyHandler(CommandHandler[CreateAgency, Result[None, Error]]):
         with self._agency_repository as repo:
             db_result = repo.add(into_db)
 
-        if db_result.is_failure():
-            return Result.from_failure(db_result)
-        return Result.from_value(None)
+        return db_result if db_result.is_failure() else Result.from_value(None)
