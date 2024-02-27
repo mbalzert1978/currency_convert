@@ -1,4 +1,5 @@
 class CurrencyConverterError(Exception):
+
     """Base class for exceptions raised by the CurrencyConverter class."""
 
 

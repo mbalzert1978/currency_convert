@@ -8,6 +8,7 @@ _T_new = typing.TypeVar("_T_new")
 
 
 class UnwrapFailedError(CurrencyConverterError):
+
     """Unwrap failed error."""
 
 
@@ -30,8 +31,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         self,
         default_value: _T_new,
     ) -> _T_co | _T_new:
-        """
-        Get value or default value.
+        """Get value or default value.
 
         .. code:: python
 
@@ -42,8 +42,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         """
 
     def unwrap(self) -> _T_co:
-        """
-        Get value or raise exception.
+        """Get value or raise exception.
 
         .. code:: python
 
@@ -58,8 +57,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         """
 
     def failure(self) -> _E_co:
-        """
-        Get failed value or raise exception.
+        """Get failed value or raise exception.
 
         .. code:: python
 
@@ -78,8 +76,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         cls,
         inner_value: _T_new,
     ) -> "Result[_T_new, typing.Any]":
-        """
-        One more value to create success unit values.
+        """One more value to create success unit values.
 
         It is useful as a united way to create a new value from any container.
 
@@ -99,8 +96,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         cls,
         inner_value: _E_co | _T_co,
     ) -> "Result[typing.Any, _E_co]":
-        """
-        One more value to create failure unit values.
+        """One more value to create failure unit values.
 
         It is useful as a united way to create a new value from any container.
 
@@ -116,8 +112,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         return Failure(inner_value)
 
     def is_success(self) -> bool:
-        """
-        Check if the operation represented by this instance is successful.
+        """Check if the operation represented by this instance is successful.
 
         .. code:: python
 
@@ -126,8 +121,7 @@ class Result(typing.Protocol[_T_co, _E_co]):
         """
 
     def is_failure(self) -> bool:
-        """
-        Check if the operation represented by this instance is a failure.
+        """Check if the operation represented by this instance is a failure.
 
         .. code:: python
 
