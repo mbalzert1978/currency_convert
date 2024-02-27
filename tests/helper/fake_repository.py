@@ -10,9 +10,9 @@ ModelType = typing.TypeVar("ModelType", bound=Entity)
 
 
 class FakeRepository(typing.Generic[ModelType]):
-    def __init__(self, raise_on: str | None = None) -> types.NoneType:
+    def __init__(self, entities: set[ModelType] | None = None, raise_on: str | None = None) -> types.NoneType:
         self._raise_on = raise_on
-        self._entities: set[ModelType] = set()
+        self._entities: set[ModelType] = entities or set()
 
     def __enter__(self) -> typing.Self:
         return self
@@ -25,7 +25,6 @@ class FakeRepository(typing.Generic[ModelType]):
     ) -> None:
         if __exc_value is not None:
             raise Error(500, "Unreachable", __exc_type, __traceback)
-        return
 
     def find_by_name(self, name: str) -> Result[Maybe[ModelType, None], Error]:
         if self._raise_on is not None and self._raise_on in "find_by_name":
@@ -63,5 +62,5 @@ class FakeRepository(typing.Generic[ModelType]):
                 return res
         return res
 
-    def _get_first_entity(self) -> ModelType | None:
-        return next(iter(self._entities), None)
+    def _get_first_entity(self) -> ModelType:
+        return next(iter(self._entities))

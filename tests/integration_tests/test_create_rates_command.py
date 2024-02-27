@@ -1,8 +1,5 @@
 from decimal import Decimal
 import random
-import pytest
-from currency_convert.core.app.agency.create.command import CreateAgency
-from currency_convert.core.app.agency.create.handler import CreateAgencyHandler
 from currency_convert.core.app.rate.create.many.command import CreateRates
 from currency_convert.core.app.rate.create.many.handler import CreateRatesHandler
 from currency_convert.core.app.rate.create.single.command import CreateRate
@@ -14,42 +11,38 @@ from currency_convert.core.domain.shared.value_objects.currency_code import Curr
 from currency_convert.core.domain.shared.value_objects.money import Money
 from tests.helper.fake_repository import FakeRepository
 
-
-@pytest.fixture()
-def insert_agency() -> FakeRepository[Agency]:
-    repo = FakeRepository[Agency]()
-    CreateAgencyHandler(repo).handle(
-        CreateAgency(
-            name="test_agency",
-            base_currency=CurrencyCode.create(),
-            residing_country=Country.create(),
-        )
-    )
-    return repo
+CURRENCIES = (
+    "USD",
+    "JPY",
+    "HRK",
+    "PHP",
+    "ADJ",
+    "BOA",
+    "TET",
+)
 
 
-def test_rates_can_be_created_from_command_handler(
-    insert_agency: FakeRepository[Agency],
-) -> None:
+def test_rates_can_be_created_from_command_handler() -> None:
     # Arrange
-    currency_codes = ("USD", "JPY", "HRK", "PHP", "ADJ", "BOA", "TET")
-    agency = insert_agency._get_first_entity()
-    if agency is None:
-        pytest.fail("No agency in test_repo.")
+    agency = Agency.create(
+        "test",
+        CurrencyCode.create(),
+        Country.create(),
+    )
+    rates = [
+        Rate.create(
+            agency.id_,
+            CurrencyCode.create(CURRENCIES[v]),
+            Money.create(Decimal(v)),
+        )
+        for v in range(1, 6)
+    ]
 
     cmd = CreateRates(
-        agency_name="test_agency",
-        rates=[
-            Rate.create(
-                agency.id_,
-                CurrencyCode.create(random.choice(currency_codes)),
-                Money.create(Decimal(random.expovariate(1))),
-            )
-            for _ in range(5)
-        ],
+        agency_name=agency.name,
+        rates=rates,
     )
-    r_repo = FakeRepository[Rate]()
-    handler = CreateRatesHandler(insert_agency, r_repo)
+    handler = CreateRatesHandler(FakeRepository[Agency]({agency}), FakeRepository[Rate]())
 
     # Act
     result = handler.handle(cmd)
@@ -58,24 +51,17 @@ def test_rates_can_be_created_from_command_handler(
     assert result.is_success()
 
 
-def test_result_is_handled_correct_on_exception(
-    insert_agency: FakeRepository[Agency],
-) -> None:
-    agency = insert_agency._get_first_entity()
-    if agency is None:
-        pytest.fail("No agency in test_repo.")
-
+def test_result_is_handled_correct_on_exception() -> None:
+    # Arrange
     cmd = CreateRate(
-        agency_name="test_agency",
-        base_currency=CurrencyCode.create(),
+        agency_name="test",
         to_currency=CurrencyCode.create("USD"),
         rate=Money.create(Decimal(random.expovariate(1))),
-        residing_coutry=Country.create(),
     )
-    r_repo = FakeRepository[Rate](raise_on="add")
-    handler = CreateRateHandler(insert_agency, r_repo)
+    handler = CreateRateHandler(FakeRepository[Agency](), FakeRepository[Rate]())
 
     # Act
-    res = handler.handle(cmd)
+    result = handler.handle(cmd)
 
-    assert res
+    # Assert
+    assert result.is_failure()

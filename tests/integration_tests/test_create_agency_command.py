@@ -20,3 +20,24 @@ def test_agency_can_be_created_from_command_handler() -> None:
 
     # Assert
     assert result.is_success()
+
+
+def test_failure_result_on_duplication():
+    # Arrange
+    agency = Agency.create(
+        "test_agency",
+        CurrencyCode.create(),
+        Country.create(),
+    )
+    cmd = CreateAgency(
+        name="test_agency",
+        base_currency=CurrencyCode.create(),
+        residing_country=Country.create(),
+    )
+    handler = CreateAgencyHandler(FakeRepository[Agency]({agency}))
+
+    # Act
+    result = handler.handle(cmd)
+
+    # Assert
+    assert result.is_failure()

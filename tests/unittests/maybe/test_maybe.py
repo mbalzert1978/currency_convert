@@ -59,7 +59,7 @@ def test_equality() -> None:
     assert Some(1) != Null(1)
     assert Some(1) != Some(2)
     assert Null(1) == Null(2)
-    assert not (Some(1) != Some(1))
+    assert Some(1) == Some(1)
     assert Some(1) != "abc"
     assert Some("0") != Some(0)
 
