@@ -4,9 +4,9 @@ import nox
 @nox.session(python=["3.11", "3.12"])
 def tests(session: nox.Session):
     session.install("-r", "requirements.txt")
-    session.install("pytest")
-    session.log("test_json")
-    session.run("pytest")
+    session.install("pytest", "coverage")
+    session.run("coverage", "run", "-m", "pytest")
+    session.run("coverage", "report", "--fail-under=80")
 
 
 @nox.session()
