@@ -24,8 +24,7 @@ class Maybe(typing.Protocol[_T_co, _N_co]):
         self,
         default_value: _T_new,
     ) -> _T_co | _T_new:
-        """
-        Get value or default value.
+        """Get value or default value.
 
         .. code:: python
 
@@ -35,8 +34,7 @@ class Maybe(typing.Protocol[_T_co, _N_co]):
         """
 
     def unwrap(self) -> _T_co:
-        """
-        Get value or None.
+        """Get value or None.
 
         .. code:: python
 
@@ -51,8 +49,7 @@ class Maybe(typing.Protocol[_T_co, _N_co]):
         cls,
         inner_value: _T_new,
     ) -> "Maybe[_T_new, typing.Any]":
-        """
-        One more value to create Some unit values.
+        """One more value to create Some unit values.
 
         It is useful as a united way to create a new value from any container.
 
@@ -71,8 +68,7 @@ class Maybe(typing.Protocol[_T_co, _N_co]):
         cls,
         inner_value: _N_co | _T_co,
     ) -> "Maybe[typing.Any, _N_co]":
-        """
-        One more value to create Null unit values.
+        """One more value to create Null unit values.
 
         It is useful as a united way to create a new value from any container.
 
@@ -87,8 +83,7 @@ class Maybe(typing.Protocol[_T_co, _N_co]):
         return Null(inner_value)
 
     def is_some(self) -> bool:
-        """
-        Check if the operation represented by this instance is Someful.
+        """Check if the operation represented by this instance is Someful.
 
         .. code:: python
 
@@ -96,8 +91,7 @@ class Maybe(typing.Protocol[_T_co, _N_co]):
         """
 
     def is_none(self) -> bool:
-        """
-        Check if the operation represented by this instance is a Null.
+        """Check if the operation represented by this instance is a Null.
 
         .. code:: python
 
@@ -136,7 +130,7 @@ class Some(Maybe[_T_co, typing.Any]):
 
 
 @typing.final
-class Null(Maybe[typing.Any, _N_co]):
+class Null(Maybe[None, _N_co]):
     __slots__ = ("_inner_value",)
     __match_args__ = ("_inner_value",)
 
@@ -149,8 +143,8 @@ class Null(Maybe[typing.Any, _N_co]):
     def __hash__(self) -> int:
         return hash((False, self._inner_value))
 
-    def __init__(self, inner_value: _N_co) -> None:
-        super().__init__(inner_value)
+    def __init__(self, _: _N_co) -> None:
+        super().__init__(None)
 
     def unwrap(self) -> None:
         return None

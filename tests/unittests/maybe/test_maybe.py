@@ -3,7 +3,6 @@ import pytest
 from currency_convert.core.domain.shared.maybe import Maybe, Some, Null
 
 
-
 def test_unwrap() -> None:
     assert Some(1).unwrap() == 1
 
@@ -13,8 +12,6 @@ def test_unwrap() -> None:
 def test_value_or() -> None:
     assert Some(1).value_or(2) == 1
     assert Null(1).value_or(2) == 2
-
-
 
 
 def test_is_Some() -> None:
@@ -43,7 +40,7 @@ def test_pattern_matching_Null_type() -> None:
         case Null(value):
             reached = True
 
-    assert value == "nay"
+    assert value is None
     assert reached
 
 
@@ -61,7 +58,7 @@ def test_equality() -> None:
     assert Null(1) == Null(1)
     assert Some(1) != Null(1)
     assert Some(1) != Some(2)
-    assert Null(1) != Null(2)
+    assert Null(1) == Null(2)
     assert not (Some(1) != Some(1))
     assert Some(1) != "abc"
     assert Some("0") != Some(0)
@@ -80,5 +77,5 @@ def test_repr() -> None:
     assert repr(o) == "Some(123)"
     assert o == eval(repr(o))
 
-    assert repr(n) == "Null(-1)"
+    assert repr(n) == "Null(None)"
     assert n == eval(repr(n))
