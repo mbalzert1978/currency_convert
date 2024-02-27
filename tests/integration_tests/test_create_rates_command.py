@@ -28,7 +28,9 @@ def insert_agency() -> FakeRepository[Agency]:
     return repo
 
 
-def test_rates_can_be_created_from_command_handler(insert_agency: FakeRepository[Agency]) -> None:
+def test_rates_can_be_created_from_command_handler(
+    insert_agency: FakeRepository[Agency],
+) -> None:
     # Arrange
     currency_codes = ("USD", "JPY", "HRK", "PHP", "ADJ", "BOA", "TET")
     agency = insert_agency._get_first_entity()
@@ -55,7 +57,10 @@ def test_rates_can_be_created_from_command_handler(insert_agency: FakeRepository
     # Assert
     assert result.is_success()
 
-def test_result_is_handled_correct_on_exception(insert_agency: FakeRepository[Agency])->None:
+
+def test_result_is_handled_correct_on_exception(
+    insert_agency: FakeRepository[Agency],
+) -> None:
     agency = insert_agency._get_first_entity()
     if agency is None:
         pytest.fail("No agency in test_repo.")
@@ -65,7 +70,7 @@ def test_result_is_handled_correct_on_exception(insert_agency: FakeRepository[Ag
         base_currency=CurrencyCode.create(),
         to_currency=CurrencyCode.create("USD"),
         rate=Money.create(Decimal(random.expovariate(1))),
-        residing_coutry=Country.create()
+        residing_coutry=Country.create(),
     )
     r_repo = FakeRepository[Rate](raise_on="add")
     handler = CreateRateHandler(insert_agency, r_repo)

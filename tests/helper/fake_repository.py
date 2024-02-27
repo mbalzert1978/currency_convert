@@ -5,13 +5,12 @@ from currency_convert.core.domain.shared.entity import Entity
 from currency_convert.core.domain.shared.error import Error
 from currency_convert.core.domain.shared.maybe import Maybe
 from currency_convert.core.domain.shared.result.result import Result
-from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 
 ModelType = typing.TypeVar("ModelType", bound=Entity)
 
 
 class FakeRepository(typing.Generic[ModelType]):
-    def __init__(self, raise_on: str|None = None) -> types.NoneType:
+    def __init__(self, raise_on: str | None = None) -> types.NoneType:
         self._raise_on = raise_on
         self._entities: set[ModelType] = set()
 
@@ -28,12 +27,11 @@ class FakeRepository(typing.Generic[ModelType]):
             raise Error(500, "Unreachable", __exc_type, __traceback)
         return
 
-
     def find_by_name(self, name: str) -> Result[Maybe[ModelType, None], Error]:
         if self._raise_on is not None and self._raise_on in "find_by_name":
-            return  Result.from_failure(Error(500,"Test_error"))
+            return Result.from_failure(Error(500, "Test_error"))
         try:
-            found = next((entity for entity in self._entities if entity.name == name))
+            found = next(entity for entity in self._entities if entity.name == name)
         except StopIteration:
             return Result.from_failure(Maybe.from_none(None))
         except Exception as exc:
@@ -43,7 +41,7 @@ class FakeRepository(typing.Generic[ModelType]):
 
     def add(self, entity: ModelType) -> Result[None, Error]:
         if self._raise_on is not None and self._raise_on in "add":
-            return  Result.from_failure(Error(500,"Test_error"))
+            return Result.from_failure(Error(500, "Test_error"))
         try:
             self._entities.add(entity)
         except Exception as exc:
@@ -53,12 +51,12 @@ class FakeRepository(typing.Generic[ModelType]):
 
     def update(self, entity: ModelType) -> Result[None, Error]:
         if self._raise_on is not None and self._raise_on in "update":
-            return  Result.from_failure(Error(500,"Test_error"))
+            return Result.from_failure(Error(500, "Test_error"))
         return self.add(entity)
 
     def add_many(self, entities: typing.Sequence[ModelType]) -> Result[None, Error]:
         if self._raise_on is not None and self._raise_on in "add_many":
-            return  Result.from_failure(Error(500,"Test_error"))
+            return Result.from_failure(Error(500, "Test_error"))
         for entity in entities:
             res = self.add(entity)
             if res.is_failure():
