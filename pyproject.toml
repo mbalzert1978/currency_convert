@@ -23,6 +23,13 @@ nox = "^2023.4.22"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.coverage.run]
+omit = ["tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
+
+
 [tool.mypy]
 python_version = "3.11"
 warn_unused_configs = true
