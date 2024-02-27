@@ -16,72 +16,75 @@ ruff = "^0.2.2"
 pytest = "^8.0.1"
 coverage = "^7.4.1"
 mypy = "^1.8.0"
+bandit = "^1.7.7"
+nox = "^2023.4.22"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+exclude = ["tests"]
+ignore_missing_imports = true
+
 [tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "tests",
+]
 line-length = 119
-extend-exclude = ["tests"]
-
-[tool.ruff.format]
-docstring-code-format = true
-
+indent-width = 4
+target-version = "py310"
 
 [tool.ruff.lint]
-exclude = ["tests"]
-select = [
-    "A",
-    "B",
-    "F",
-    "G",
-    "I",
-    "N",
-    "Q",
-    "S",
-    "W",
-    "ANN",
-    "ARG",
-    "BLE",
-    "COM",
-    "DJ",
-    "DTZ",
-    "EM",
-    "ERA",
-    "EXE",
-    "FBT",
-    "ICN",
-    "INP",
-    "ISC",
-    "NPY",
-    "PD",
-    "PGH",
-    "PIE",
-    "PL",
-    "PT",
-    "PTH",
-    "PYI",
-    "RET",
-    "RSE",
-    "RUF",
-    "SIM",
-    "SLF",
-    "TCH",
-    "TID",
-    "TRY",
-    "UP",
-    "YTT",
-]
+select = ["D", "E", "F", "UP", "B", "SIM", "S", "W", "N", "PL", "TRY", "RUF"]
 ignore = [
-    "ANN001",
-    "ANN101",
-    "ANN102",
-    "D211",
-    "D212",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
     "D107",
-    "Q000",
-    "COM812",
-    "ISC001",
+    "D211",
+    "D213",
 ]
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+docstring-code-line-length = "dynamic"
