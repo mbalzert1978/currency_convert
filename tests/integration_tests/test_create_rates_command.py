@@ -1,9 +1,9 @@
 from decimal import Decimal
 import random
-from currency_convert.core.app.rate.create.many.command import CreateRates
-from currency_convert.core.app.rate.create.many.handler import CreateRatesHandler
-from currency_convert.core.app.rate.create.single.command import CreateRate
-from currency_convert.core.app.rate.create.single.handler import CreateRateHandler
+from currency_convert.core.app.rate.create.rate.command import CreateRates
+from currency_convert.core.app.rate.create.rate.handler import CreateRatesHandler
+from currency_convert.core.app.rate.create.rates.command import CreateRate
+from currency_convert.core.app.rate.create.rates.handler import CreateRateHandler
 from currency_convert.core.domain.agency.entity import Agency
 from currency_convert.core.domain.rate.entity import Rate
 from currency_convert.core.domain.shared.value_objects.country import Country

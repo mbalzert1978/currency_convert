@@ -5,6 +5,9 @@ from currency_convert.core.domain.agency.entity import Agency
 from currency_convert.core.domain.shared.error import Error
 from currency_convert.core.domain.shared.maybe import Maybe
 from currency_convert.core.domain.shared.result.result import Result
+from currency_convert.core.domain.shared.value_objects.country import Country
+from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
+from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 
 
 class IAgencyRepository(typing.Protocol):
@@ -19,11 +22,20 @@ class IAgencyRepository(typing.Protocol):
     ) -> None:
         ...
 
+    def get(self, id_: UUIDID) -> Result[Maybe[Agency, None], Error]:
+        ...
+
     def find_by_name(self, name: str) -> Result[Maybe[Agency, None], Error]:
         ...
 
     def add(self, agency: Agency) -> Result[None, Error]:
         ...
 
-    def update(self, agency: Agency) -> Result[None, Error]:
+    def update(
+        self,
+        agency: Agency,
+        name: str | None = None,
+        base_currency: CurrencyCode | None = None,
+        residing_country: Country | None = None,
+    ) -> Result[None, Error]:
         ...

@@ -1,12 +1,13 @@
+from http import HTTPStatus
+
 from currency_convert.core.app.abstractions.command_handler import CommandHandler
 from currency_convert.core.app.agency.create.command import CreateAgency
 from currency_convert.core.domain.agency.agency_repository import IAgencyRepository
 from currency_convert.core.domain.agency.entity import Agency
 from currency_convert.core.domain.agency.errors import AgencyAllreadExistsError
+from currency_convert.core.domain.resources import strings_error
 from currency_convert.core.domain.shared.error import Error
 from currency_convert.core.domain.shared.result.result import Result
-
-EXIST_MSG = "Agency with name %s already exists."
 
 
 class CreateAgencyHandler(CommandHandler[CreateAgency, Result[None, Error]]):
@@ -18,7 +19,12 @@ class CreateAgencyHandler(CommandHandler[CreateAgency, Result[None, Error]]):
             get_result = repo.find_by_name(cmd.name)
 
         if get_result.is_success() and get_result.unwrap().is_some():
-            return Result.from_failure(AgencyAllreadExistsError(409, detail=EXIST_MSG % cmd.name))
+            return Result.from_failure(
+                AgencyAllreadExistsError(
+                    HTTPStatus.CONFLICT,
+                    strings_error.ALREADY_EXIST % ("Agency", cmd.name),
+                )
+            )
 
         into_db = Agency.create(
             name=cmd.name,
