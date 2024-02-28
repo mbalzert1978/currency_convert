@@ -3,12 +3,12 @@ import typing
 import pydantic
 
 from currency_convert.core.domain.shared.domain_event import DomainEvent
-from currency_convert.core.domain.shared.mixin import IDMixin
+from currency_convert.core.domain.shared.mixin import ConfigMixin, IDMixin
 
 TV = typing.TypeVar("TV")
 
 
-class Entity(IDMixin):
+class Entity(IDMixin, ConfigMixin):
     domain_events: list[DomainEvent] = pydantic.Field(default_factory=list, init=False)
 
     def send(self, domain_event: DomainEvent) -> None:
