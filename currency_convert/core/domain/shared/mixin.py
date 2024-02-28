@@ -24,6 +24,10 @@ def _set_datetime_with_timezone(value: datetime.datetime | None) -> datetime.dat
     return value
 
 
+class ConfigMixin(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(from_attributes=True)
+
+
 class CreatedAtMixin(pydantic.BaseModel):
     created_at: typing.Annotated[datetime.datetime | None, pfv.BeforeValidator(_set_datetime_with_timezone)]
 
