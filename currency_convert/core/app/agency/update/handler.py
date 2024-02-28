@@ -1,26 +1,27 @@
+from http import HTTPStatus
+
 from currency_convert.core.app.abstractions.command_handler import CommandHandler
 from currency_convert.core.app.agency.update.command import UpdateAgency
 from currency_convert.core.domain.agency.agency_repository import IAgencyRepository
-from currency_convert.core.domain.agency.entity import Agency
+from currency_convert.core.domain.agency.errors import AgencyNotFoundError
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.result.result import Failure, Result, Success
-from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
+from currency_convert.core.domain.shared.result.result import Result
+
+ERR_MESSAGE = "There is no Agency with the given id."
 
 
-class UpdateAgencyHandler(CommandHandler[UpdateAgency, Result[UUIDID, Error]]):
+class UpdateAgencyHandler(CommandHandler[UpdateAgency, Result[None, Error]]):
     def __init__(self, agency_repository: IAgencyRepository) -> None:
         self._agency_repository = agency_repository
 
-    def handle(self, cmd: UpdateAgency) -> Result[UUIDID, Error]:
-        match self._agency_repository.find_by_name(cmd.name):
-            case Success(in_db):
-                into_db = Agency.update(**in_db.model_dump())
-            case Failure(exc):
-                return Result.from_failure(exc)
+    def handle(self, cmd: UpdateAgency) -> Result[None, Error]:
+        with self._agency_repository as repo:
+            get_result = repo.get(cmd.id_)
+
+        if get_result.is_failure() or (maybe_agency := get_result.unwrap()).is_none():
+            return Result.from_failure(AgencyNotFoundError(HTTPStatus.NOT_FOUND, ERR_MESSAGE))
 
         with self._agency_repository as repo:
-            db_result = repo.update(into_db)
+            db_result = repo.update(maybe_agency.unwrap(), cmd.name, cmd.base_currency, cmd.residing_country)
 
-        if db_result.is_failure():
-            return Result.from_failure(db_result)
-        return Result.from_value(into_db.id_)
+        return db_result if db_result.is_failure() else Result.from_value(None)
