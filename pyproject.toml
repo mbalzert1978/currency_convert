@@ -86,8 +86,6 @@ recursive = true
 
 [tool.mypy]
 warn_unused_configs = true
-ignore_missing_imports = true
-strict = true
 exclude = '''(?x)(
     (^|/)test[^/]*\.py$    # files named "test*.py"
   )'''

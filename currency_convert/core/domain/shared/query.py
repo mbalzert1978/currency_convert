@@ -1,5 +1,5 @@
 import pydantic
 
 
-class Query(pydantic.BaseModel):  # type: ignore[misc]
+class Query(pydantic.BaseModel):
     """Basic query class."""

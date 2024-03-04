@@ -1,5 +1,5 @@
 import pydantic
 
 
-class Command(pydantic.BaseModel):  # type: ignore[misc]
+class Command(pydantic.BaseModel):
     """Basic command class."""

@@ -5,7 +5,7 @@ import pydantic
 TV = typing.TypeVar("TV")
 
 
-class ValueObject(pydantic.BaseModel, typing.Generic[TV]):  # type: ignore[misc]
+class ValueObject(pydantic.BaseModel, typing.Generic[TV]):
     model_config = pydantic.ConfigDict(frozen=True)
     value: TV
 
