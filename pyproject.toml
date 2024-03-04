@@ -16,8 +16,9 @@ ruff = "^0.2.2"
 pytest = "^8.0.1"
 coverage = "^7.4.1"
 mypy = "^1.8.0"
+pytest-cov = "^4.1.0"
 bandit = "^1.7.7"
-nox = "^2023.4.22"
+pre-commit = "^3.6.2"
 
 [build-system]
 requires = ["poetry-core"]
@@ -29,61 +30,42 @@ omit = ["tests/*", "*/__init__.py"]
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
 
-
-[tool.mypy]
-python_version = "3.11"
-warn_unused_configs = true
-exclude = ["tests"]
-ignore_missing_imports = true
-
 [tool.ruff]
 exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".ipynb_checkpoints",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pyenv",
-    ".pytest_cache",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    ".vscode",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "site-packages",
-    "venv",
-    "tests",
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".ipynb_checkpoints",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pyenv",
+  ".pytest_cache",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  ".vscode",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "site-packages",
+  "venv",
 ]
-line-length = 119
+line-length = 88
 indent-width = 4
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["D", "E", "F", "UP", "B", "SIM", "S", "W", "N", "PL", "TRY", "RUF"]
-ignore = [
-    "D100",
-    "D101",
-    "D102",
-    "D103",
-    "D104",
-    "D105",
-    "D106",
-    "D107",
-    "D211",
-    "D213",
-]
+select = ["E4", "E7", "E9", "F"]
+ignore = []
 fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -95,3 +77,17 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = false
 docstring-code-line-length = "dynamic"
+
+[tool.bandit]
+exclude = '''(?x)(
+    (^|/)test[^/]*\.py$    # files named "test*.py"
+  )'''
+recursive = true
+
+[tool.mypy]
+warn_unused_configs = true
+ignore_missing_imports = true
+strict = true
+exclude = '''(?x)(
+    (^|/)test[^/]*\.py$    # files named "test*.py"
+  )'''
