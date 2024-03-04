@@ -74,4 +74,4 @@ jobs:
         run: poetry install
       - name: security with bandit
         run: |
-          poetry run bandit -rc pyproject.toml currency_convert
+          poetry run bandit -rc pyproject.toml
