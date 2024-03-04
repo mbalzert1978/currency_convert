@@ -8,7 +8,6 @@ _T_new = typing.TypeVar("_T_new")
 
 
 class UnwrapFailedError(CurrencyConverterError):
-
     """Unwrap failed error."""
 
 
@@ -22,7 +21,10 @@ class Result(typing.Protocol[_T_co, _E_co]):
         self._inner_value = inner_value
 
     def __eq__(self, __value: object) -> bool:
-        return isinstance(__value, type(self)) and self._inner_value == __value._inner_value
+        return (
+            isinstance(__value, type(self))
+            and self._inner_value == __value._inner_value
+        )
 
     def __ne__(self, __value: object) -> bool:
         return not (self == __value)
@@ -148,10 +150,10 @@ class Success(Result[_T_co, typing.Any]):
         super().__init__(inner_value)
 
     def unwrap(self) -> _T_co:
-        return self._inner_value
+        return self._inner_value  # type:ignore[no-any-return]
 
     def value_or(self, _: _T_new) -> _T_co:
-        return self._inner_value
+        return self._inner_value  # type:ignore[no-any-return]
 
     def failure(self) -> typing.NoReturn:
         raise UnwrapFailedError(self)

@@ -24,21 +24,25 @@ def _set_datetime_with_timezone(value: datetime.datetime | None) -> datetime.dat
     return value
 
 
-class ConfigMixin(pydantic.BaseModel):
+class ConfigMixin(pydantic.BaseModel):  # type: ignore[misc]
     model_config = pydantic.ConfigDict(from_attributes=True)
 
 
-class CreatedAtMixin(pydantic.BaseModel):
-    created_at: typing.Annotated[datetime.datetime | None, pfv.BeforeValidator(_set_datetime_with_timezone)]
+class CreatedAtMixin(pydantic.BaseModel):  # type: ignore[misc]
+    created_at: typing.Annotated[
+        datetime.datetime | None, pfv.BeforeValidator(_set_datetime_with_timezone)
+    ]
 
 
-class UpdatedAtMixin(pydantic.BaseModel):
-    updated_at: typing.Annotated[datetime.datetime | None, pfv.BeforeValidator(_set_datetime_with_timezone)]
+class UpdatedAtMixin(pydantic.BaseModel):  # type: ignore[misc]
+    updated_at: typing.Annotated[
+        datetime.datetime | None, pfv.BeforeValidator(_set_datetime_with_timezone)
+    ]
 
 
-class TimestampMixin(pydantic.BaseModel):
+class TimestampMixin(pydantic.BaseModel):  # type: ignore[misc]
     timestamp: datetime.datetime = pydantic.Field(default_factory=UTC_NOW)
 
 
-class IDMixin(pydantic.BaseModel):
-    id_: UUIDID = pydantic.Field(default_factory=UUIDID.create)
+class IDMixin(pydantic.BaseModel):  # type: ignore[misc]
+    id_: UUIDID[typing.Any] = pydantic.Field(default_factory=UUIDID.create)

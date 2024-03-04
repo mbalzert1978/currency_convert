@@ -8,13 +8,15 @@ from currency_convert.core.domain.shared.value_objects.value_object import Value
 
 PRECISION = decimal.Decimal(10) ** -8
 DEFAULT = decimal.Decimal(0)
-_DecimalNew: typing.TypeAlias = decimal.Decimal | float | str | tuple[int, typing.Sequence[int], int]
+_DecimalNew: typing.TypeAlias = (
+    decimal.Decimal | float | str | tuple[int, typing.Sequence[int], int]
+)
 
 
 class Money(ValueObject[decimal.Decimal]):
     value: _DecimalNew  # type: ignore[assignment]
 
-    @pydantic.field_validator("value", mode="after")
+    @pydantic.field_validator("value", mode="after")  # type: ignore[misc]
     @classmethod
     def quantize(cls, value: _DecimalNew) -> decimal.Decimal:
         try:

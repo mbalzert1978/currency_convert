@@ -11,14 +11,18 @@ from currency_convert.core.domain.shared.result.result import Result
 
 
 class CreateRatesHandler(CommandHandler[CreateRates, Result[None, Error]]):
-    def __init__(self, agency_repository: IAgencyRepository, rate_repository: IRateRepository) -> None:
+    def __init__(
+        self, agency_repository: IAgencyRepository, rate_repository: IRateRepository
+    ) -> None:
         self._agency_repository = agency_repository
         self._rate_repository = rate_repository
 
     def handle(self, cmd: CreateRates) -> Result[None, Error]:
-        if (get_result := self._agency_repository.find_by_name(cmd.agency_name)).is_failure():
+        if (
+            get_result := self._agency_repository.find_by_name(cmd.agency_name)
+        ).is_failure():
             return Result.from_failure(get_result.failure())
-        if (agency := get_result.unwrap()).is_none():
+        if get_result.unwrap().is_none():
             return Result.from_failure(
                 AgencyNotFoundError(
                     HTTPStatus.NOT_FOUND,

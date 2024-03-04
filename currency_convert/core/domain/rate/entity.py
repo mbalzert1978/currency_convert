@@ -9,14 +9,14 @@ from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 
 
 class Rate(Entity, CreatedAtMixin):
-    agency_id: UUIDID
+    agency_id: UUIDID[typing.Any]
     to_currency: CurrencyCode
     rate: Money
 
     @classmethod
     def create(
         cls,
-        agency_id: UUIDID,
+        agency_id: UUIDID[typing.Any],
         to_currency: CurrencyCode,
         rate: Money,
         created_at: datetime.datetime | None = None,

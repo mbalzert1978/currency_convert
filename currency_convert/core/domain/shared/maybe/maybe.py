@@ -15,7 +15,10 @@ class Maybe(typing.Protocol[_T_co, _N_co]):
         self._inner_value = inner_value
 
     def __eq__(self, __value: object) -> bool:
-        return isinstance(__value, type(self)) and self._inner_value == __value._inner_value
+        return (
+            isinstance(__value, type(self))
+            and self._inner_value == __value._inner_value
+        )
 
     def __ne__(self, __value: object) -> bool:
         return not (self == __value)
@@ -117,10 +120,10 @@ class Some(Maybe[_T_co, typing.Any]):
         super().__init__(inner_value)
 
     def unwrap(self) -> _T_co:
-        return self._inner_value
+        return self._inner_value  # type:ignore[no-any-return]
 
     def value_or(self, _: _T_new) -> _T_co:
-        return self._inner_value
+        return self._inner_value  # type:ignore[no-any-return]
 
     def is_some(self) -> typing.Literal[True]:
         return True
