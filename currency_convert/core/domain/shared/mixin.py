@@ -45,4 +45,4 @@ class TimestampMixin(pydantic.BaseModel):  # type: ignore[misc]
 
 
 class IDMixin(pydantic.BaseModel):  # type: ignore[misc]
-    id_: UUIDID[typing.Any] = pydantic.Field(default_factory=UUIDID.create)
+    id_: UUIDID = pydantic.Field(default_factory=UUIDID.create)  # type:ignore[type-arg]

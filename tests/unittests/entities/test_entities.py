@@ -3,7 +3,7 @@ from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 
 
 def test_entities_are_equal_when_ids_are_equal() -> None:
-    id_ = UUIDID(value="test_ID")
+    id_ = UUIDID.create()
     a = Entity(id_=id_)
     b = Entity(id_=id_)
 
