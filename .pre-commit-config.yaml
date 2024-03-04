@@ -27,4 +27,4 @@ repos:
     hooks:
     - id: bandit
       exclude: "tests/"
-      args: ["-c", "pyproject.toml", "currency_convert"]
+      args: ["-c", "pyproject.toml"]
