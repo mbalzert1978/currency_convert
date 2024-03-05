@@ -1,3 +1,4 @@
+import json
 import pytest
 
 from currency_convert.core.domain.shared.result import (
@@ -35,6 +36,23 @@ def test_is_success() -> None:
 def test_is_failure() -> None:
     assert not Success(1).is_failure()
     assert Failure(1).is_failure()
+
+
+def test_map() -> None:
+    assert Success(1).map(bool).unwrap() == True
+    with pytest.raises(UnwrapFailedError):
+        Failure(2).map(bool).unwrap()
+
+
+def test_bind() -> None:
+    def factory(inner_value: int) -> Result[int, str]:
+        if inner_value > 0:
+            return Result.from_value(inner_value * 2)
+        return Result.from_failure(str(inner_value))
+    
+    assert Success(1).bind(factory).unwrap() == 2
+    with pytest.raises(UnwrapFailedError):
+        Failure(2).bind(factory).unwrap()
 
 
 def test_pattern_matching_success_type() -> None:
