@@ -1,15 +1,7 @@
-Table currency {
-  code varchar(3) [primary key]
-  name varchar
-  created_at timestamp
-  updated_at timestamp
-}
-
 Table rate {
   id integer [primary key]
   agency_id integer [ref: > agency.id]
-  from_currency_code varchar(3) [ref: > currency.code]
-  to_currency_code varchar(3) [ref: > currency.code]
+  to_currency varchar(3)
   rate float
   created_at timestamp
   updated_at timestamp
@@ -18,7 +10,7 @@ Table rate {
 Table agency {
   id integer [primary key]
   name varchar
-  base_currency_code varchar(3) [ref: > currency.code]
+  base_currency varchar(3)
   created_at timestamp
   updated_at timestamp
 }

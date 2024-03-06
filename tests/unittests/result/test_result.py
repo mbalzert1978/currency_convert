@@ -90,7 +90,7 @@ def test_equality() -> None:
     assert Success(1) != Failure(1)
     assert Success(1) != Success(2)
     assert Failure(1) != Failure(2)
-    assert not (Success(1) != Success(1))
+    assert Success(1) == Success(1)
     assert Success(1) != "abc"
     assert Success("0") != Success(0)
 
