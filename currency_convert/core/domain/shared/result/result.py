@@ -2,8 +2,8 @@ import typing
 
 from currency_convert.core.domain.shared.error import CurrencyConverterError
 
-_T_co = typing.TypeVar("_T_co", covariant=True, bound=typing.Any)
-_E_co = typing.TypeVar("_E_co", covariant=True, bound=Exception)
+_T = typing.TypeVar("_T")
+_E = typing.TypeVar("_E")
 _T_new = typing.TypeVar("_T_new")
 
 
@@ -12,19 +12,16 @@ class UnwrapFailedError(CurrencyConverterError):
 
 
 @typing.runtime_checkable
-class Result(typing.Protocol[_T_co, _E_co]):
+class Result(typing.Protocol[_T, _E]):
     __slots__ = ("_inner_value",)
 
-    _inner_value: _T_co | _E_co
+    _inner_value: _T | _E
 
-    def __init__(self, inner_value: _T_co | _E_co) -> None:
+    def __init__(self, inner_value: _T | _E) -> None:
         self._inner_value = inner_value
 
     def __eq__(self, __value: object) -> bool:
-        return (
-            isinstance(__value, type(self))
-            and self._inner_value == __value._inner_value
-        )
+        return isinstance(__value, type(self)) and self._inner_value == __value._inner_value
 
     def __ne__(self, __value: object) -> bool:
         return not (self == __value)
@@ -32,44 +29,41 @@ class Result(typing.Protocol[_T_co, _E_co]):
     def value_or(
         self,
         default_value: _T_new,
-    ) -> _T_co | _T_new:
-        """Get value or default value.
+    ) -> _T | _T_new:
+        """
+        Get value or default value.
 
         .. code:: python
-
-        >>> from returns.result import Failure, Success
         >>> assert Success(1).value_or(2) == 1
-        >>> assert Failure(1).value_or(2) == 2
+        ... assert Failure(1).value_or(2) == 2
 
         """
 
-    def unwrap(self) -> _T_co:
-        """Get value or raise exception.
+    def unwrap(self) -> _T:
+        """
+        Get value or raise exception.
 
         .. code:: python
-
-        >>> from returns.result import Failure, Success
         >>> assert Success(1).unwrap() == 1
 
-        >>> Failure(1).unwrap()
+        ... Failure(1).unwrap()
         Traceback (most recent call last):
         ...
-        returns.primitives.exceptions.UnwrapFailedError
+        returns.UnwrapFailedError
 
         """
 
-    def failure(self) -> _E_co:
-        """Get failed value or raise exception.
+    def failure(self) -> _E:
+        """
+        Get failed value or raise exception.
 
         .. code:: python
-
-        >>> from returns.result import Failure, Success
         >>> assert Failure(1).failure() == 1
 
-        >>> Success(1).failure()
+        ... Success(1).failure()
             Traceback (most recent call last):
             ...
-            returns.primitives.exceptions.UnwrapFailedError
+            returns.UnwrapFailedError
 
         """
 
@@ -78,13 +72,12 @@ class Result(typing.Protocol[_T_co, _E_co]):
         cls,
         inner_value: _T_new,
     ) -> "Result[_T_new, typing.Any]":
-        """One more value to create success unit values.
+        """
+        One more value to create success unit values.
 
         It is useful as a united way to create a new value from any container.
 
         .. code:: python
-
-        >>> from returns.result import Result, Success
         >>> assert Result.from_value(1) == Success(1)
 
         You can use this method or :func:`~Success`,
@@ -94,17 +87,13 @@ class Result(typing.Protocol[_T_co, _E_co]):
         return Success(inner_value)
 
     @classmethod
-    def from_failure(
-        cls,
-        inner_value: _E_co | _T_co,
-    ) -> "Result[typing.Any, _E_co]":
-        """One more value to create failure unit values.
+    def from_failure(cls, inner_value: _E) -> "Result[typing.Any, _E]":
+        """
+        One more value to create failure unit values.
 
         It is useful as a united way to create a new value from any container.
 
         .. code:: python
-
-        >>> from returns.result import Result, Failure
         >>> assert Result.from_failure(1) == Failure(1)
 
         You can use this method or :func:`Failure`,
@@ -114,30 +103,56 @@ class Result(typing.Protocol[_T_co, _E_co]):
         return Failure(inner_value)
 
     def is_success(self) -> bool:
-        """Check if the operation represented by this instance is successful.
+        """
+        Check if the operation represented by this instance is successful.
 
         .. code:: python
-
-        >>> from returns.result import Result, Failure
         >>> assert Result.from_value(1).is_success()
         """
 
     def is_failure(self) -> bool:
-        """Check if the operation represented by this instance is a failure.
+        """
+        Check if the operation represented by this instance is a failure.
 
         .. code:: python
-
-        >>> from returns.result import Result, Failure
         >>> assert Result.from_failure(Exception()).is_failure()
+        """
+
+    def bind(self, function: typing.Callable[[_T], "Result[_T, _E]"]) -> "Result[_T, _E]":
+        """
+        Binds the current result to a function returning another result.
+        Use this when the function intodruces side effects.
+
+        .. code:: python
+        >>> result = Result.from_success(10)
+        ...
+        ...
+        ... def factory(inner_value: int) -> Result[int, str]:
+        ...     if inner_value > 0:
+        ...         return Result.from_value(inner_value * 2)
+        ...     return Result.from_failure(str(inner_value))
+        ...
+        ...
+        ... assert result.bind(factory) == Result.from_success(20)
+        """
+
+    def map(self, function: typing.Callable[[_T], _T_new]) -> "Result[_T_new, _E]":
+        """
+        Maps the current result to a new value using a function.
+        Use this when the function doesn't introduce side effects
+
+        .. code:: python
+        >>> result = Result.from_success(10)
+        ... assert result.map(bool) == Result.from_success(True)
         """
 
 
 @typing.final
-class Success(Result[_T_co, typing.Any]):
+class Success(Result[_T, typing.Any]):
     __slots__ = ("_inner_value",)
     __match_args__ = ("_inner_value",)
 
-    def __iter__(self) -> typing.Iterator[_T_co]:
+    def __iter__(self) -> typing.Iterator[_T]:
         yield self._inner_value
 
     def __repr__(self) -> str:
@@ -146,14 +161,14 @@ class Success(Result[_T_co, typing.Any]):
     def __hash__(self) -> int:
         return hash((True, self._inner_value))
 
-    def __init__(self, inner_value: _T_co) -> None:
+    def __init__(self, inner_value: _T) -> None:
         super().__init__(inner_value)
 
-    def unwrap(self) -> _T_co:
-        return self._inner_value  # type:ignore[no-any-return]
+    def unwrap(self) -> _T:
+        return self._inner_value
 
-    def value_or(self, _: _T_new) -> _T_co:
-        return self._inner_value  # type:ignore[no-any-return]
+    def value_or(self, _: _T_new) -> _T:
+        return self._inner_value
 
     def failure(self) -> typing.NoReturn:
         raise UnwrapFailedError(self)
@@ -164,9 +179,15 @@ class Success(Result[_T_co, typing.Any]):
     def is_failure(self) -> typing.Literal[False]:
         return False
 
+    def bind(self, function: typing.Callable[[_T], Result[_T, _E]]) -> Result[_T, _E]:
+        return function(self._inner_value)
+
+    def map(self, function: typing.Callable[[_T], _T_new]) -> Result[_T_new, _E]:
+        return Result.from_value(function(self._inner_value))
+
 
 @typing.final
-class Failure(Result[typing.Any, _E_co]):
+class Failure(Result[typing.Any, _E]):
     __slots__ = ("_inner_value",)
     __match_args__ = ("_inner_value",)
 
@@ -184,7 +205,7 @@ class Failure(Result[typing.Any, _E_co]):
     def __hash__(self) -> int:
         return hash((False, self._inner_value))
 
-    def __init__(self, inner_value: _E_co) -> None:
+    def __init__(self, inner_value: _E) -> None:
         super().__init__(inner_value)
 
     def unwrap(self) -> typing.NoReturn:
@@ -197,7 +218,7 @@ class Failure(Result[typing.Any, _E_co]):
     def value_or(self, default_value: _T_new) -> _T_new:
         return default_value
 
-    def failure(self) -> _E_co:
+    def failure(self) -> _E:
         return self._inner_value
 
     def is_success(self) -> typing.Literal[False]:
@@ -205,3 +226,9 @@ class Failure(Result[typing.Any, _E_co]):
 
     def is_failure(self) -> typing.Literal[True]:
         return True
+
+    def bind(self, _: typing.Callable[[_T], Result[_T, _E]]) -> Result[_T, _E]:
+        return self
+
+    def map(self, _: typing.Callable[[_T], _T_new]) -> Result[_T_new, _E]:
+        return self
