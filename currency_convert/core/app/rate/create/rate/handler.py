@@ -18,7 +18,6 @@ from currency_convert.core.domain.shared.returns import (
 
 class CreateRatesHandler(CommandHandler[CreateRates, Result[None, Error]]):
     def __init__(
-        self,
         agency_repository: IAgencyRepository,
         rate_repository: IRateRepository,
     ) -> None:
