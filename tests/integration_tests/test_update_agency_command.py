@@ -1,8 +1,10 @@
 from currency_convert.core.app.agency.update.command import UpdateAgency
 from currency_convert.core.app.agency.update.handler import UpdateAgencyHandler
 from currency_convert.core.domain.agency.entity import Agency
+from currency_convert.core.domain.agency.errors import AgencyNotFoundError
 from currency_convert.core.domain.shared.value_objects.country import Country
 from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
+from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
 from tests.helper.fake_repository import FakeRepository
 
 
@@ -24,3 +26,23 @@ def test_update_agency():
     # Assert
     assert result.is_success()
     assert repo._entities.pop().name == expected
+
+
+def test_update_agency_not_found():
+    # Arrange
+    expected = "new_name"
+    agency = Agency.create(
+        "test_agency",
+        CurrencyCode.create(),
+        Country.create(),
+    )
+    cmd = UpdateAgency(id_=UUIDID.create(), name=expected)
+    repo = FakeRepository[Agency]({agency})
+    handler = UpdateAgencyHandler(repo)
+
+    # Act
+    result = handler.handle(cmd)
+
+    # Assert
+    assert result.is_failure()
+    assert isinstance(result.failure(), AgencyNotFoundError)

@@ -1,10 +1,9 @@
 import types
 import typing
-from currency_convert.core.domain.shared.entity import Entity
 
+from currency_convert.core.domain.shared.entity import Entity
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.maybe import Maybe
-from currency_convert.core.domain.shared.result.result import Result
+from currency_convert.core.domain.shared.returns import Null, Option, Result, Some
 from currency_convert.core.domain.shared.value_objects.country import Country
 from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
 from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID
@@ -13,8 +12,14 @@ ModelType = typing.TypeVar("ModelType", bound=Entity)
 
 
 class FakeRepository(typing.Generic[ModelType]):
-    def __init__(self, entities: set[ModelType] | None = None, raise_on: str | None = None) -> types.NoneType:
+    def __init__(
+        self,
+        entities: set[ModelType] | None = None,
+        raise_on: str | None = None,
+        exc: Error | None = None,
+    ) -> None:
         self._raise_on = raise_on
+        self._exc = exc
         self._entities: set[ModelType] = entities or set()
 
     def __enter__(self) -> typing.Self:
@@ -29,29 +34,33 @@ class FakeRepository(typing.Generic[ModelType]):
         if __exc_value is not None:
             raise Error(500, "Unreachable", __exc_type, __traceback)
 
-    def get(self, id_: UUIDID) -> Result[Maybe[ModelType, None], Error]:
-        if self._raise_on is not None and self._raise_on in "get":
-            return Result.from_failure(Error(500, "Test_error"))
+    def get(self, id_: UUIDID) -> Result[Option[ModelType], Error]:
+        if self._raise_on is not None and self._exc and self._raise_on in "get":
+            return Result.from_failure(self._exc)
         return self._getter(lambda e: e.id_ == id_)
 
-    def find_by_name(self, name: str) -> Result[Maybe[ModelType, None], Error]:
-        if self._raise_on is not None and self._raise_on in "find_by_name":
-            return Result.from_failure(Error(500, "Test_error"))
+    def find_by_name(self, name: str) -> Result[Option[ModelType], Error]:
+        if (
+            self._raise_on is not None
+            and self._exc
+            and self._raise_on in "find_by_name"
+        ):
+            return Result.from_failure(self._exc)
         return self._getter(lambda e: e.name == name)
 
     def _getter(self, filter_fn: typing.Callable[[ModelType], bool]):
         try:
             found = next(entity for entity in self._entities if filter_fn(entity))
         except StopIteration:
-            return Result.from_failure(Maybe.from_none(None))
+            return Result.from_value(Null(None))
         except Exception as exc:
             return Result.from_failure(Error(404, "Not found.", exc))
         else:
-            return Result.from_value(Maybe.from_value(found))
+            return Result.from_value(Some(found))
 
     def add(self, entity: ModelType) -> Result[None, Error]:
-        if self._raise_on is not None and self._raise_on in "add":
-            return Result.from_failure(Error(500, "Test_error"))
+        if self._raise_on is not None and self._exc and self._raise_on in "add":
+            return Result.from_failure(self._exc)
         try:
             self._entities.add(entity)
         except Exception as exc:
@@ -66,16 +75,16 @@ class FakeRepository(typing.Generic[ModelType]):
         base_currency: CurrencyCode | None = None,
         residing_country: Country | None = None,
     ) -> Result[None, Error]:
-        if self._raise_on is not None and self._raise_on in "update":
-            return Result.from_failure(Error(500, "Test_error"))
+        if self._raise_on is not None and self._exc and self._raise_on in "update":
+            return Result.from_failure(self._exc)
         entity.name = name or entity.name
         entity.base_currency = base_currency or entity.base_currency
         entity.residing_country = residing_country or entity.residing_country
         return self.add(entity)
 
     def add_many(self, entities: typing.Sequence[ModelType]) -> Result[None, Error]:
-        if self._raise_on is not None and self._raise_on in "add_many":
-            return Result.from_failure(Error(500, "Test_error"))
+        if self._raise_on is not None and self._exc and self._raise_on in "add_many":
+            return Result.from_failure(self._exc)
         for entity in entities:
             res = self.add(entity)
             if res.is_failure():

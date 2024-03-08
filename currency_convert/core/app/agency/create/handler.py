@@ -7,7 +7,7 @@ from currency_convert.core.domain.agency.entity import Agency
 from currency_convert.core.domain.agency.errors import AgencyAllreadExistsError
 from currency_convert.core.domain.resources import strings_error
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.result.result import Result
+from currency_convert.core.domain.shared.returns import Result
 
 
 class CreateAgencyHandler(CommandHandler[CreateAgency, Result[None, Error]]):
