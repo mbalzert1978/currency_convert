@@ -3,8 +3,7 @@ import typing
 
 from currency_convert.core.domain.agency.entity import Agency
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.option import Option
-from currency_convert.core.domain.shared.result.result import Result
+from currency_convert.core.domain.shared.returns import Option, Result
 from currency_convert.core.domain.shared.value_objects.country import Country
 from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
 from currency_convert.core.domain.shared.value_objects.uuidid import UUIDID

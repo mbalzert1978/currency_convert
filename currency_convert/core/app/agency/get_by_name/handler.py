@@ -7,7 +7,7 @@ from currency_convert.core.domain.agency.errors import AgencyNotFoundError
 from currency_convert.core.domain.resources import strings_error
 from currency_convert.core.domain.shared.adapter.sql_alchemy_adapter import QueryAdapter
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.result.result import Result
+from currency_convert.core.domain.shared.returns import Result
 
 
 class GetAgencyByNameHandler(QueryHandler[GetAgencyByName, Result[Agency, Error]]):

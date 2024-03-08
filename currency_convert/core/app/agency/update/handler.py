@@ -6,7 +6,13 @@ from currency_convert.core.domain.agency.agency_repository import IAgencyReposit
 from currency_convert.core.domain.agency.errors import AgencyNotFoundError
 from currency_convert.core.domain.resources import strings_error
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.result.result import Result
+from currency_convert.core.domain.shared.returns import (
+    Failure,
+    Null,
+    Result,
+    Some,
+    Success,
+)
 
 
 class UpdateAgencyHandler(CommandHandler[UpdateAgency, Result[None, Error]]):
@@ -14,20 +20,17 @@ class UpdateAgencyHandler(CommandHandler[UpdateAgency, Result[None, Error]]):
         self._agency_repository = agency_repository
 
     def handle(self, cmd: UpdateAgency) -> Result[None, Error]:
-        with self._agency_repository as repo:
-            get_result = repo.get(cmd.id_)
-
-        if get_result.is_failure():
-            return Result.from_failure(get_result.failure())
-        if (maybe_agency := get_result.unwrap()).is_none():
-            return Result.from_failure(
-                AgencyNotFoundError(
-                    HTTPStatus.NOT_FOUND,
-                    strings_error.NOT_FOUND % ("ID", cmd.id_),
+        match err := self._agency_repository.get(cmd.id_):
+            case Success(Some(agency)):
+                return self._agency_repository.update(
+                    agency, cmd.name, cmd.base_currency, cmd.residing_country
                 )
-            )
-
-        with self._agency_repository as repo:
-            db_result = repo.update(maybe_agency.unwrap(), cmd.name, cmd.base_currency, cmd.residing_country)
-
-        return db_result if db_result.is_failure() else Result.from_value(None)
+            case Success(Null()):
+                not_found = AgencyNotFoundError(
+                    HTTPStatus.NOT_FOUND,
+                    strings_error.NOT_FOUND % ("ID", cmd),
+                )
+                return Failure(not_found)
+            case _:
+                # Result contains an error.
+                return err  # type: ignore[return-value]
