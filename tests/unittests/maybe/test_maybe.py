@@ -1,31 +1,38 @@
+import typing
+
 import pytest
 
-from currency_convert.core.domain.shared.maybe import Maybe, Some, Null
+from currency_convert.core.domain.shared.option import Null, Option, Some
+from currency_convert.core.domain.shared.result.result import Result
 
 
 def test_unwrap() -> None:
-    assert Some(1).unwrap() == 1
-
-    assert Null(1).unwrap() is None
+    assert Option.from_value(1).unwrap() == 1
+    assert Option.from_none(1).unwrap() is None
 
 
 def test_value_or() -> None:
-    assert Some(1).value_or(2) == 1
-    assert Null(1).value_or(2) == 2
+    assert Option.from_value(1).value_or(2) == 1
+    assert Option.from_none(1).value_or(2) == 2
 
 
 def test_is_Some() -> None:
-    assert Some(1).is_some()
-    assert not Null(1).is_some()
+    assert Option.from_value(1).is_some()
+    assert not Option.from_none(1).is_some()
 
 
 def test_is_Null() -> None:
-    assert not Some(1).is_none()
-    assert Null(1).is_none()
+    assert not Option.from_value(1).is_none()
+    assert Option.from_none(1).is_none()
+
+
+def test_ok_or_else() -> None:
+    assert Option.from_value(1).ok_or_else("Foo") == Result.from_value(1)
+    assert Option.from_none(1).ok_or_else("Foo") == Result.from_failure("Foo")
 
 
 def test_pattern_matching_Some_type() -> None:
-    o = Maybe.from_value("yay")
+    o = Option.from_value("yay")
     match o:
         case Some(value):
             reached = True
@@ -35,7 +42,7 @@ def test_pattern_matching_Some_type() -> None:
 
 
 def test_pattern_matching_Null_type() -> None:
-    n = Maybe.from_none("nay")
+    n = Option.from_none("nay")
     match n:
         case Null(value):
             reached = True
@@ -45,29 +52,57 @@ def test_pattern_matching_Null_type() -> None:
 
 
 def test_slots() -> None:
-    o = Some("yay")
-    n = Null("nay")
+    o = Option.from_value("yay")
+    n = Option.from_none("nay")
     with pytest.raises(AttributeError):
         o.some_arbitrary_attribute = 1  # type: ignore[attr-defined]
     with pytest.raises(AttributeError):
         n.some_arbitrary_attribute = 1  # type: ignore[attr-defined]
 
 
+def test_bind() -> None:
+    def mul_two(f: typing.Optional[int]) -> Option[int]:
+        return Null(f) if f is None else Some(f * 2)  # type: ignore[arg-type]
+
+    assert Option.from_value(10).bind(mul_two) == Option.from_value(20)
+    assert Option.from_none(-10).bind(mul_two) == Option.from_none(None)
+
+
+def test_map() -> None:
+    assert Option.from_value(10).map(bool) == Option.from_value(True)
+    assert Option.from_none(10).map(bool) == Option.from_none(None)
+
+
+def test_map_or() -> None:
+    assert Option.from_value("foo").map_or(42, len) == 3
+    assert Option.from_none("bar").map_or(42, len) == 42
+
+
 def test_equality() -> None:
-    assert Some(1) == Some(1)
-    assert Null(1) == Null(1)
-    assert Some(1) != Null(1)
-    assert Some(1) != Some(2)
-    assert Null(1) == Null(2)
-    assert Some(1) == Some(1)
-    assert Some(1) != "abc"
-    assert Some("0") != Some(0)
+    assert Option.from_value(1) == Option.from_value(1)
+    assert Option.from_none(1) == Option.from_none(1)
+    assert Option.from_value(1) != Option.from_none(1)
+    assert Option.from_value(1) != Option.from_value(2)
+    assert Option.from_none(1) == Option.from_none(2)
+    assert Option.from_value(1) == Option.from_value(1)
+    assert Option.from_value(1) != "abc"
+    assert Option.from_value("0") != Option.from_value(0)
 
 
 def test_hash() -> None:
-    assert len({Some(1), Null("2"), Some(1), Null("2")}) == 2
-    assert len({Some(1), Some(2)}) == 2
-    assert len({Some("a"), Null("a")}) == 2
+    assert (
+        len(
+            {
+                Option.from_value(1),
+                Option.from_none("2"),
+                Option.from_value(1),
+                Option.from_none("2"),
+            }
+        )
+        == 2
+    )
+    assert len({Option.from_value(1), Option.from_value(2)}) == 2
+    assert len({Option.from_value("a"), Option.from_none("a")}) == 2
 
 
 def test_repr() -> None:

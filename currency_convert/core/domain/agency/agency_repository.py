@@ -3,7 +3,7 @@ import typing
 
 from currency_convert.core.domain.agency.entity import Agency
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.maybe import Maybe
+from currency_convert.core.domain.shared.option import Option
 from currency_convert.core.domain.shared.result.result import Result
 from currency_convert.core.domain.shared.value_objects.country import Country
 from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
@@ -20,10 +20,9 @@ class IAgencyRepository(typing.Protocol):
         __traceback: types.TracebackType | None = None,
     ) -> None: ...
 
-    def get(self, id_: UUIDID) -> Result[Maybe[Agency, None], Error]:  # type:ignore[type-arg]
-        ...
+    def get(self, id_: UUIDID) -> Result[Option[Agency], Error]: ...
 
-    def find_by_name(self, name: str) -> Result[Maybe[Agency, None], Error]: ...
+    def find_by_name(self, name: str) -> Result[Option[Agency], Error]: ...
 
     def add(self, agency: Agency) -> Result[None, Error]: ...
 
