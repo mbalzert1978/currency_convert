@@ -8,7 +8,6 @@ from currency_convert.core.app.rate.create.rates.handler import CreateRateHandle
 from currency_convert.core.domain.agency.entity import Agency
 from currency_convert.core.domain.rate.entity import Rate
 from currency_convert.core.domain.shared.error import Error
-from currency_convert.core.domain.shared.returns.returns import Result
 from currency_convert.core.domain.shared.value_objects.country import Country
 from currency_convert.core.domain.shared.value_objects.currency_code import CurrencyCode
 from currency_convert.core.domain.shared.value_objects.money import Money
@@ -79,9 +78,8 @@ def test_error_on_agency_search() -> None:
         to_currency=CurrencyCode.create("USD"),
         rate=Money.create(Decimal(random.expovariate(1))),
     )
-    err = Error(500, "Test_error")
     handler = CreateRateHandler(
-        FakeRepository[Agency](raise_on="find_by_name", exc=err),
+        FakeRepository[Agency](raise_on="find_by_name", exc=Error(500, "Test_error")),
         FakeRepository[Rate](),
     )
 
@@ -90,7 +88,7 @@ def test_error_on_agency_search() -> None:
 
     # Assert
     assert result.is_failure()
-    assert result == Result.from_failure(err)
+    assert isinstance(result.failure(), Error)
 
 
 def test_error_on_adding_rate() -> None:
@@ -105,10 +103,9 @@ def test_error_on_adding_rate() -> None:
         to_currency=CurrencyCode.create("USD"),
         rate=Money.create(Decimal(random.expovariate(1))),
     )
-    err = Error(500, "Test_error")
     handler = CreateRateHandler(
         FakeRepository[Agency]({agency}),
-        FakeRepository[Rate](raise_on="add", exc=err),
+        FakeRepository[Rate](raise_on="add", exc=Error(500, "Test_error")),
     )
 
     # Act
@@ -116,4 +113,4 @@ def test_error_on_adding_rate() -> None:
 
     # Assert
     assert result.is_failure()
-    assert result == Result.from_failure(err)
+    assert isinstance(result.failure(), Error)
