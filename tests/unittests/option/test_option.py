@@ -2,33 +2,15 @@ import typing
 
 import pytest
 
-from currency_convert.core.domain.shared.option import Null, Option, Some
-from currency_convert.core.domain.shared.result.result import Result
+from currency_convert.core.domain.shared.returns import Null, Option, Result, Some
 
 
-def test_unwrap() -> None:
-    assert Option.from_value(1).unwrap() == 1
-    assert Option.from_none(1).unwrap() is None
+def test_init() -> None:
+    o = Option.from_value(1)
+    n = Option.from_none(1)
 
-
-def test_value_or() -> None:
-    assert Option.from_value(1).value_or(2) == 1
-    assert Option.from_none(1).value_or(2) == 2
-
-
-def test_is_Some() -> None:
-    assert Option.from_value(1).is_some()
-    assert not Option.from_none(1).is_some()
-
-
-def test_is_Null() -> None:
-    assert not Option.from_value(1).is_none()
-    assert Option.from_none(1).is_none()
-
-
-def test_ok_or_else() -> None:
-    assert Option.from_value(1).ok_or_else("Foo") == Result.from_value(1)
-    assert Option.from_none(1).ok_or_else("Foo") == Result.from_failure("Foo")
+    assert o == Some(1)
+    assert n == Null(1)
 
 
 def test_pattern_matching_Some_type() -> None:
@@ -58,24 +40,6 @@ def test_slots() -> None:
         o.some_arbitrary_attribute = 1  # type: ignore[attr-defined]
     with pytest.raises(AttributeError):
         n.some_arbitrary_attribute = 1  # type: ignore[attr-defined]
-
-
-def test_bind() -> None:
-    def mul_two(f: typing.Optional[int]) -> Option[int]:
-        return Null(f) if f is None else Some(f * 2)  # type: ignore[arg-type]
-
-    assert Option.from_value(10).bind(mul_two) == Option.from_value(20)
-    assert Option.from_none(-10).bind(mul_two) == Option.from_none(None)
-
-
-def test_map() -> None:
-    assert Option.from_value(10).map(bool) == Option.from_value(True)
-    assert Option.from_none(10).map(bool) == Option.from_none(None)
-
-
-def test_map_or() -> None:
-    assert Option.from_value("foo").map_or(42, len) == 3
-    assert Option.from_none("bar").map_or(42, len) == 42
 
 
 def test_equality() -> None:
@@ -114,3 +78,46 @@ def test_repr() -> None:
 
     assert repr(n) == "Null(None)"
     assert n == eval(repr(n))
+
+
+def test_unwrap() -> None:
+    assert Option.from_value(1).unwrap() == 1
+    assert Option.from_none(1).unwrap() is None
+
+
+def test_value_or() -> None:
+    assert Option.from_value(1).value_or(2) == 1
+    assert Option.from_none(1).value_or(2) == 2
+
+
+def test_is_some() -> None:
+    assert Option.from_value(1).is_some()
+    assert not Option.from_none(1).is_some()
+
+
+def test_is_none() -> None:
+    assert not Option.from_value(1).is_none()
+    assert Option.from_none(1).is_none()
+
+
+def test_ok_or_else() -> None:
+    assert Option.from_value(1).ok_or_else("Foo") == Result.from_value(1)
+    assert Option.from_none(1).ok_or_else("Foo") == Result.from_failure("Foo")
+
+
+def test_bind() -> None:
+    def mul_two(f: typing.Optional[int]) -> Option[int]:
+        return Null(f) if f is None else Some(f * 2)  # type: ignore[arg-type]
+
+    assert Option.from_value(10).bind(mul_two) == Option.from_value(20)
+    assert Option.from_none(-10).bind(mul_two) == Option.from_none(None)
+
+
+def test_map() -> None:
+    assert Option.from_value(10).map(bool) == Option.from_value(True)
+    assert Option.from_none(10).map(bool) == Option.from_none(None)
+
+
+def test_map_or() -> None:
+    assert Option.from_value("foo").map_or(42, len) == 3
+    assert Option.from_none("bar").map_or(42, len) == 42
