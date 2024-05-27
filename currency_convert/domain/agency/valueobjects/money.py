@@ -26,8 +26,9 @@ class Money(ValueObject[decimal.Decimal]):
     @classmethod
     def create(cls, value: _Decimal) -> Result[Money, GenericError]:
         try:
-            r = cls(decimal.Decimal(value).quantize(_PRECISION).copy_abs())
+            r = cls(decimal.Decimal(value).quantize(_PRECISION))
         except decimal.InvalidOperation as exc:
             return Result.Err(GenericError.from_exc(exc))
-        else:
-            return Result.Ok(r)
+        if r.value < 0:
+            return Result.Err(GenericError())
+        return Result.Ok(r)
