@@ -11,3 +11,8 @@ class Entity:
 
     def __hash__(self) -> int:
         return hash(self.id_) * 41
+
+
+@dataclasses.dataclass(slots=True, eq=False)
+class AggregateRoot(Entity):
+    pass
