@@ -1,21 +1,21 @@
 import dataclasses
-from typing import Sequence, TypeVar
 import abc
+import typing
 
-T = TypeVar("T")
+T = typing.TypeVar("T")
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class ValueObject(abc.ABC):
+class ValueObject(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
-    def get_attomic_values(self) -> Sequence[T]:
+    def get_atomic_values(self) -> typing.Iterator[T]:
         raise NotImplementedError
 
     def __eq__(self, value: object) -> bool:
         return (
             isinstance(value, type(self))
-            and self.get_attomic_values() == value.get_attomic_values()
+            and self.get_atomic_values() == value.get_atomic_values()
         )
 
     def __hash__(self) -> int:
-        return hash(self.get_attomic_values()) * 41
+        return hash(self.get_atomic_values()) * 41
