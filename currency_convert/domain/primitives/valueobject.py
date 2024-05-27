@@ -1,5 +1,7 @@
-import dataclasses
+from __future__ import annotations
+
 import abc
+import dataclasses
 import typing
 
 T = typing.TypeVar("T")
@@ -11,10 +13,13 @@ class ValueObject(abc.ABC, typing.Generic[T]):
     def get_atomic_values(self) -> typing.Iterator[T]:
         raise NotImplementedError
 
-    def __eq__(self, value: object) -> bool:
-        return (
-            isinstance(value, type(self))
-            and self.get_atomic_values() == value.get_atomic_values()
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, type(self)) and self._equals(other)
+
+    def _equals(self, other: ValueObject[T]) -> bool:
+        return all(
+            attr == other
+            for attr, other in zip(self.get_atomic_values(), other.get_atomic_values())
         )
 
     def __hash__(self) -> int:
