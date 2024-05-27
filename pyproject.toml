@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 pydantic = "^2.6.1"
 pydantic-settings = "^2.2.0"
+result = {git = "https://github.com/mbalzert1978/result.git"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.1"

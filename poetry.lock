@@ -344,6 +344,21 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "result"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = "^3.11"
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/mbalzert1978/result.git"
+reference = "HEAD"
+resolved_reference = "15ab2de2db5aa80619804983ce3186d84ef80a3a"
+
+[[package]]
 name = "ruff"
 version = "0.4.5"
 description = "An extremely fast Python linter and code formatter, written in Rust."
@@ -383,4 +398,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4effcad0c5cf834e43abda627852c48bf3bce6ec79ef336f226c5c11cfe49ea2"
+content-hash = "74774db4f12cacedec94a5147e326849be2a07cd59321803df10147df02608c6"
