@@ -345,7 +345,7 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "result"
-version = "0.1.3"
+version = "0.1.4"
 description = ""
 optional = false
 python-versions = "^3.11"
@@ -356,7 +356,7 @@ develop = false
 type = "git"
 url = "https://github.com/mbalzert1978/result.git"
 reference = "HEAD"
-resolved_reference = "0133d84f0839b37c210c307b38ed483952f57fba"
+resolved_reference = "e101d64acbec1a7d4bc4c17858e0775999f1a991"
 
 [[package]]
 name = "ruff"
