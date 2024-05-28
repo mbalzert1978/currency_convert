@@ -18,8 +18,8 @@ class ValueObject(abc.ABC, typing.Generic[T]):
 
     def _equals(self, other: ValueObject[T]) -> bool:
         return all(
-            attr == other
-            for attr, other in zip(self.get_atomic_values(), other.get_atomic_values())
+            self == other
+            for self, other in zip(self.get_atomic_values(), other.get_atomic_values())
         )
 
     def __hash__(self) -> int:
