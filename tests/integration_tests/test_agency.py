@@ -93,3 +93,23 @@ def test_add_unprocessable_rates(agency: Agency) -> None:
     assert result.is_err()
     assert len(result.unwrap_err()) == 2
     assert len(agency.rates_repository.rates) == 0
+
+def test_get_rate_no_base_currency(agency: Agency) -> None:
+    # Add rates that do not include the base currency
+    agency.add_rate("EUR", "GBP", "0.85", "2023-10-01")
+    agency.add_rate("GBP", "JPY", "150.00", "2023-10-01")
+    
+    # Attempt to get a rate that requires the base currency
+    result = agency.get_rate("EUR", "JPY", "2023-10-01")
+    assert result.is_err()
+
+def test_get_rate_with_date_range(agency: Agency) -> None:
+    # Add rates for different dates
+    agency.add_rate("USD", "EUR", "0.85", "2023-10-01")
+    agency.add_rate("USD", "EUR", "0.86", "2023-09-30")
+    agency.add_rate("USD", "EUR", "0.87", "2023-09-29")
+    
+    # Attempt to get a rate for a date with no direct rate, should fallback to previous dates
+    result = agency.get_rate("USD", "EUR", "2023-10-02")
+    assert result.is_ok()
+    assert result.unwrap().rate == Money.create("0.85").unwrap()

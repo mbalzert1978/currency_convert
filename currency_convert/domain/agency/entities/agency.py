@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+from datetime import datetime, timedelta
 from typing import Sequence
 
 from result import Result
@@ -15,6 +16,7 @@ from currency_convert.domain.primitives.entity import AggregateRoot
 from currency_convert.domain.primitives.error import GenericError
 
 _logger = logging.getLogger(__name__)
+
 
 class UnprocessedRate(TypedDict):
     currency_from: str
@@ -69,38 +71,44 @@ class Agency(AggregateRoot):
             return Result.Err(unprocessable_rates)
         return Result.Ok(None)
 
-    def _get_direct_rate(
+    def _get_rate_for_date_range(
         self, currency_from: str, currency_to: str, date: str
     ) -> Result[Rate, GenericError]:
         if (rates := self.rates_repository.get_all()).is_err():
             return Result.Err(GenericError())
-        return next(
-            (
-                Result.Ok(rate)
-                for rate in rates.unwrap()
-                if rate.currency_from.code == currency_from
-                and rate.currency_to.code == currency_to
-                and rate.date == date
-            ),
-            Result.Err(GenericError()),
-        )
+
+        target_date = datetime.strptime(date, "%Y-%m-%d")
+        for days_back in range(6):
+            check_date = (target_date - timedelta(days=days_back)).strftime("%Y-%m-%d")
+            rate: Result[Rate, GenericError] | None = next(
+                (
+                    Result.Ok(rate)
+                    for rate in rates.unwrap()
+                    if rate.currency_from.code == currency_from
+                    and rate.currency_to.code == currency_to
+                    and rate.date == check_date
+                ),
+                None,
+            )
+            if rate:
+                return rate
+
+        return Result.Err(GenericError())
+
+    def _get_direct_rate(
+        self, currency_from: str, currency_to: str, date: str
+    ) -> Result[Rate, GenericError]:
+        return self._get_rate_for_date_range(currency_from, currency_to, date)
 
     def _find_base_rates(
         self, currency_from: str, currency_to: str, date: str
     ) -> tuple[Rate | None, Rate | None]:
-        if (rates := self.rates_repository.get_all()).is_err():
-            return None, None
-
-        rate_from_base = None
-        rate_to_base = None
-
-        for rate in rates.unwrap():
-            match (rate.currency_from.code, rate.currency_to.code, rate.date):
-                case (cf, self.base.code, d) if cf == currency_from and d == date:
-                    rate_from_base = rate
-                case (self.base.code, ct, d) if ct == currency_to and d == date:
-                    rate_to_base = rate
-
+        rate_from_base = self._get_rate_for_date_range(
+            currency_from, self.base.code, date
+        ).unwrap_or(None)
+        rate_to_base = self._get_rate_for_date_range(
+            self.base.code, currency_to, date
+        ).unwrap_or(None)
         return rate_from_base, rate_to_base
 
     def get_rate(
