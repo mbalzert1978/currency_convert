@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.11"
 pydantic = "^2.6.1"
 pydantic-settings = "^2.2.0"
-result = {git = "https://github.com/mbalzert1978/result.git"}
+option = {git = "https://github.com/mbalzert1978/option.git"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.5"
