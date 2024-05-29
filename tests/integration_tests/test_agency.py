@@ -74,6 +74,9 @@ def test_get_rate(agency: Agency) -> None:
     result = agency.get_rate("USD", "EUR", "2023-10-01")
     assert result.is_ok()
     assert result.unwrap().rate == Money.create("0.85")
+    result = agency.get_rate("EUR", "USD", "2023-10-01")
+    assert result.is_ok()
+    assert result.unwrap().rate == Money.create("0.85")
 
 
 def test_list_rates(agency: Agency) -> None:

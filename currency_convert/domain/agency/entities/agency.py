@@ -66,16 +66,18 @@ class Agency(AggregateRoot):
     ) -> Result[Rate, GenericError]:
         if currency_from == self.base.code:
             return (
-                next((Some(r) for r in self.rates))
+                self.iter(lambda _: True)
                 .filter(lambda r: r.currency_to.code == currency_to)
                 .ok_or_else(GenericError)
             )
         elif currency_to == self.base.code:
             return (
-                next((Some(r) for r in self.rates))
+                self.iter(lambda _: True)
                 .filter(lambda r: r.currency_to.code == currency_from)
-                .map(lambda r: r.invert_rate().ok())
-                .ok_or_else(GenericError)
+                .map(lambda r: r.invert_rate())
+                .map_or_else(
+                    lambda: Err(GenericError()), lambda r: r.map_err(GenericError)
+                )
             )
         else:
             if (
