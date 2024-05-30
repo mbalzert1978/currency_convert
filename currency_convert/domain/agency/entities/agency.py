@@ -3,17 +3,18 @@ from __future__ import annotations
 import dataclasses
 import logging
 import typing
-from typing import Never, Sequence
+from datetime import datetime
+from functools import partial
+from typing import Sequence
 
-from results import Err, Null, Option, Result, Some
+from results import Null, Option, Result, Some
 from typing_extensions import TypedDict
 
 from currency_convert.domain.agency.valueobjects.currency import Currency
 from currency_convert.domain.agency.valueobjects.money import _Decimal
 from currency_convert.domain.agency.valueobjects.rate import Rate
 from currency_convert.domain.primitives.entity import AggregateRoot
-
-from ...primitives.error import GenericError
+from currency_convert.domain.primitives.error import GenericError
 
 _logger = logging.getLogger(__name__)
 
@@ -29,59 +30,82 @@ class UnprocessableRate(UnprocessedRate):
     pass
 
 
-TIME_PERIOD = 5
-
-
 @dataclasses.dataclass(slots=True, eq=False)
 class Agency(AggregateRoot):
     base: Currency
     name: str
+    address: str
     country: str
     rates: list[Rate] = dataclasses.field(default_factory=list)
 
     def add_rate(
-        self, currency_from: str, currency_to: str, rate: _Decimal, date: str
-    ) -> Result[None, Never]:
-        return Rate.create(currency_from, currency_to, rate, date).and_then(
-            Result.as_result(self.rates.append)
+        self,
+        currency_from: str,
+        currency_to: str,
+        rate: _Decimal,
+        date: str,
+    ) -> Result[Null[None], GenericError]:
+        return (
+            Rate.create(currency_from, currency_to, rate, date)
+            .and_then(Result.as_result(self.rates.append))
+            .map(Null)
         )
 
     def add_rates(
-        self, rates: list[UnprocessedRate]
-    ) -> Result[None, list[UnprocessableRate]]:
+        self,
+        rates: list[UnprocessedRate],
+    ) -> Result[Null[None], list[UnprocessableRate]]:
         unprocessable = [
             rate
             for rate in rates
             if self.add_rate(
-                rate["currency_from"], rate["currency_to"], rate["rate"], rate["date"]
+                rate["currency_from"],
+                rate["currency_to"],
+                rate["rate"],
+                rate["date"],
             ).is_err()
         ]
-        return Result.Err(unprocessable) if unprocessable else Result.Ok(None)
+        return Result.Err(unprocessable) if unprocessable else Result.Ok(Null(None))
 
     def get_rate(
-        self, currency_from: str, currency_to: str, date: str
+        self,
+        currency_from: str,
+        currency_to: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
     ) -> Result[Rate, GenericError]:
-        if currency_from == self.base.code:
-            return self.iter(lambda r: r.currency_to == currency_to).ok_or_else(
-                GenericError
-            )
-        elif currency_to == self.base:
+        if start_date is None:
+            start_date = datetime.now().isoformat()
+        if end_date is None:
+            end_date = datetime.now().isoformat()
+
+        def filter_on(currency: str, start_date: str, end_date: str, r: Rate) -> bool:
             return (
-                self.iter(lambda r: r.currency_to == currency_from)
-                .and_then(lambda r: r.invert_rate().ok())
-                .ok_or_else(GenericError)
+                r.currency_to == currency
+                and start_date <= r.date.isoformat() <= end_date
             )
-        else:
-            return (
-                self.iter(lambda r: r.currency_to == currency_from)
-                .ok_or_else(GenericError)
-                .and_then(lambda r: r.invert_rate().map_err(GenericError))
-                .and_then(
-                    lambda rf: self.iter(lambda r: r.currency_to == currency_to)
-                    .ok_or_else(GenericError)
-                    .and_then(lambda rt: rt.multiply(rf).map_err(GenericError))
+
+        def find_rate(
+            currency: str,
+            start_date: str,
+            end_date: str,
+        ) -> Result[Rate, GenericError]:
+            f = partial(filter_on, currency, start_date, end_date)
+            return self.iter(f).ok_or_else(GenericError)
+
+        if self.is_base_currency(currency_from):
+            return find_rate(currency_to, start_date, end_date)
+        if self.is_base_currency(currency_to):
+            return find_rate(currency_from, start_date, end_date).and_then(Rate.invert)
+        return (
+            find_rate(currency_from, start_date, end_date)
+            .and_then(Rate.invert)
+            .and_then(
+                lambda rf: find_rate(currency_to, start_date, end_date).and_then(
+                    partial(Rate.multiply, other=rf)
                 )
             )
+        )
 
     def iter(
         self,
@@ -96,5 +120,5 @@ class Agency(AggregateRoot):
     def list_rates(self) -> Sequence[Rate]:
         return tuple(self.rates)
 
-    def _has_base(self, currency_from: str, currency_to: str) -> bool:
-        return currency_from == self.base.code or currency_to == self.base.code
+    def is_base_currency(self, currency: str) -> bool:
+        return currency == self.base
