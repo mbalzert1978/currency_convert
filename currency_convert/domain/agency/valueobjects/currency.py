@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import dataclasses
 import typing
 
-from result import Result
+from results import Result
 
 from currency_convert.domain.primitives.error import GenericError
 from currency_convert.domain.primitives.valueobject import ValueObject
@@ -14,11 +15,14 @@ T = typing.TypeVar("T")
 class Currency(ValueObject[str]):
     code: str
 
+    def __eq__(self, other: T) -> bool:
+        return isinstance(other, (str, Currency)) and self.code == other
+
     @classmethod
-    def create(cls, code: str) -> Result[Currency, GenericError]:
+    def create(cls, code: str) -> Result[typing.Self, GenericError]:
         if len(code) != 3:
             return Result.Err(GenericError())
         return Result.Ok(cls(code))
 
-    def get_atomic_values(self) -> typing.Iterator[str]:
+    def get_values(self) -> typing.Iterator[str]:
         yield self.code
