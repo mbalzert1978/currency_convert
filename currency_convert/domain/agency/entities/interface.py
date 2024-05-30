@@ -1,12 +1,27 @@
-from typing import Protocol, Sequence
+import typing
+import uuid
 
-from result import Result
+from results import Result
 
-from currency_convert.domain.agency.valueobjects.rate import Rate
+from currency_convert.domain.agency.entities.agency import Agency
 from currency_convert.domain.primitives.error import GenericError
 
 
-class RatesRepository(Protocol):
-    def add(self, rate: Rate) -> Result[None, GenericError]: ...
+class AgencyRepository(typing.Protocol):
+    def create(
+        self,
+        base: str,
+        name: str,
+        address: str,
+        country: str,
+    ) -> Result[uuid.UUID, GenericError]:
+        pass
 
-    def get_all(self) -> Result[Sequence[Rate], GenericError]: ...
+    def find_by_id(self, agency_id: str) -> Result[Agency, GenericError]:
+        pass
+
+    def find_by_name(self, name: str) -> Result[Agency, GenericError]:
+        pass
+
+    def find_all(self) -> Result[list[Agency], GenericError]:
+        pass
