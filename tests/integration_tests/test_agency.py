@@ -9,23 +9,23 @@ from currency_convert.domain.agency.entities.agency import Agency, UnprocessedRa
 from currency_convert.domain.agency.valueobjects.currency import Currency
 from currency_convert.domain.agency.valueobjects.money import Money
 from currency_convert.domain.agency.valueobjects.rate import Rate
-from currency_convert.domain.primitives.error import GenericError
+from currency_convert.domain.primitives.entity import EntityError
 
 
 class FakeRatesRepository:
     def __init__(self) -> None:
         self.rates: list[Rate] = []
 
-    def add(self, rate: Rate) -> Result[None, GenericError]:
+    def add(self, rate: Rate) -> Result[None, EntityError]:
         self.rates.append(rate)
         return Result.Ok(None)
 
-    def get_all(self) -> Result[Sequence[Rate], GenericError]:
+    def get_all(self) -> Result[Sequence[Rate], EntityError]:
         return Result.Ok(self.rates)
 
     def get(
         self, filter: typing.Callable[[Rate], bool]
-    ) -> Result[Sequence[Rate], GenericError]:
+    ) -> Result[Sequence[Rate], EntityError]:
         return self.get_all().map(
             lambda rates: [rate for rate in rates if filter(rate)]
         )

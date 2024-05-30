@@ -3,8 +3,11 @@ import uuid
 
 from results import Result
 
-from currency_convert.domain.agency.entities.agency import Agency
-from currency_convert.domain.primitives.error import GenericError
+from currency_convert.domain.agency.entities.agency import (
+    Agency,
+    AgencyError,
+    AgencyNotFoundError,
+)
 
 
 class AgencyRepository(typing.Protocol):
@@ -14,14 +17,14 @@ class AgencyRepository(typing.Protocol):
         name: str,
         address: str,
         country: str,
-    ) -> Result[uuid.UUID, GenericError]:
+    ) -> Result[uuid.UUID, AgencyError]:
         pass
 
-    def find_by_id(self, agency_id: str) -> Result[Agency, GenericError]:
+    def find_by_id(self, agency_id: str) -> Result[Agency, AgencyNotFoundError]:
         pass
 
-    def find_by_name(self, name: str) -> Result[Agency, GenericError]:
+    def find_by_name(self, name: str) -> Result[Agency, AgencyNotFoundError]:
         pass
 
-    def find_all(self) -> Result[list[Agency], GenericError]:
+    def find_all(self) -> Result[list[Agency], AgencyError]:
         pass

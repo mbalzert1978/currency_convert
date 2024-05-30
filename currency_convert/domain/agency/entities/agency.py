@@ -13,10 +13,33 @@ from typing_extensions import TypedDict
 from currency_convert.domain.agency.valueobjects.currency import Currency
 from currency_convert.domain.agency.valueobjects.money import _Decimal
 from currency_convert.domain.agency.valueobjects.rate import Rate
-from currency_convert.domain.primitives.entity import AggregateRoot
-from currency_convert.domain.primitives.error import GenericError
+from currency_convert.domain.primitives.entity import AggregateRoot, EntityError
 
 _logger = logging.getLogger(__name__)
+
+
+class AgencyError(EntityError):
+    """Base class for errors related to Agency."""
+
+
+class AgencyNotFoundError(AgencyError):
+    """Error raised when an agency is not found."""
+
+
+class DuplicateRateError(AgencyError):
+    """Error raised when a duplicate rate is added to an agency."""
+
+
+class InvalidRateError(AgencyError):
+    """Error raised when an invalid rate is provided."""
+
+
+class InvalidCurrencyError(AgencyError):
+    """Error raised when an invalid currency is provided."""
+
+
+class RateNotFoundError(AgencyError):
+    """Error raised when a rate is not found for the given criteria."""
 
 
 class UnprocessedRate(TypedDict):
@@ -44,10 +67,11 @@ class Agency(AggregateRoot):
         currency_to: str,
         rate: _Decimal,
         date: str,
-    ) -> Result[Null[None], GenericError]:
+    ) -> Result[Null[None], DuplicateRateError]:
         return (
             Rate.create(currency_from, currency_to, rate, date)
             .and_then(Result.as_result(self.rates.append))
+            .map_err(lambda exc: DuplicateRateError(exc))
             .map(Null)
         )
 
@@ -73,7 +97,7 @@ class Agency(AggregateRoot):
         currency_to: str,
         start_date: str | None = None,
         end_date: str | None = None,
-    ) -> Result[Rate, GenericError]:
+    ) -> Result[Rate, RateNotFoundError]:
         if start_date is None:
             start_date = datetime.now().isoformat()
         if end_date is None:
@@ -89,23 +113,27 @@ class Agency(AggregateRoot):
             currency: str,
             start_date: str,
             end_date: str,
-        ) -> Result[Rate, GenericError]:
+        ) -> Result[Rate, RateNotFoundError]:
             f = partial(filter_on, currency, start_date, end_date)
-            return self.iter(f).ok_or_else(GenericError)
+            return self.iter(f).ok_or_else(RateNotFoundError)
 
         if self.is_base_currency(currency_from):
             return find_rate(currency_to, start_date, end_date)
         if self.is_base_currency(currency_to):
-            return find_rate(currency_from, start_date, end_date).and_then(Rate.invert)
+            return (
+                find_rate(currency_from, start_date, end_date)
+                .and_then(Rate.invert)  # type: ignore [arg-type]
+                .map_err(RateNotFoundError)
+            )
         return (
             find_rate(currency_from, start_date, end_date)
-            .and_then(Rate.invert)
+            .and_then(Rate.invert)  # type: ignore [arg-type]
             .and_then(
                 lambda rf: find_rate(currency_to, start_date, end_date).and_then(
-                    partial(Rate.multiply, other=rf)
+                    partial(Rate.multiply, other=rf)  # type: ignore [arg-type]
                 )
             )
-        )
+        ).map_err(RateNotFoundError)
 
     def iter(
         self,
@@ -116,9 +144,8 @@ class Agency(AggregateRoot):
         except StopIteration:
             return Null(None)
 
-    @Result.as_result
-    def list_rates(self) -> Sequence[Rate]:
-        return tuple(self.rates)
+    def list_rates(self) -> Result[Sequence[Rate], AgencyError]:
+        return Result.as_result(tuple)(self.rates).map_err(AgencyError)  # type: ignore [return-value, arg-type]
 
     def is_base_currency(self, currency: str) -> bool:
         return currency == self.base

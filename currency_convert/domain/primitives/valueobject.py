@@ -4,7 +4,13 @@ import abc
 import dataclasses
 import typing
 
+from currency_convert.domain.primitives.error import ConverterError
+
 T = typing.TypeVar("T")
+
+
+class ValueObjectError(ConverterError):
+    """Base class for errors related to ValueObjects."""
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

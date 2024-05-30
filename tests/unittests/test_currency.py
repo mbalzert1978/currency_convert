@@ -1,5 +1,5 @@
 from currency_convert.domain.agency.valueobjects.currency import Currency
-from currency_convert.domain.primitives.error import GenericError
+from currency_convert.domain.primitives.valueobject import ValueObjectError
 
 
 def test_create__when_code_is_valid_length_should_return_currency_instance() -> None:
@@ -12,7 +12,7 @@ def test_create__when_code_is_valid_length_should_return_currency_instance() -> 
 def test_create__when_code_is_invalid_length_should_return_generic_error() -> None:
     result = Currency.create("US")
     assert result.is_err()
-    assert isinstance(result.unwrap_err(), GenericError)
+    assert isinstance(result.unwrap_err(), ValueObjectError)
 
 
 def test_equality__when_currency_compared_with_same_string_should_return_true() -> None:
