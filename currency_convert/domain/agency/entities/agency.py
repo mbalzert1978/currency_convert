@@ -71,7 +71,7 @@ class Agency(AggregateRoot):
         return (
             Rate.create(currency_from, currency_to, rate, date)
             .and_then(Result.as_result(self.rates.append))
-            .map_err(lambda exc: DuplicateRateError(exc))
+            .map_err(lambda exc: DuplicateRateError.from_exc(exc))
             .map(Null)
         )
 
