@@ -3,7 +3,7 @@ import uuid
 from typing import Sequence
 
 import pytest
-from result import Result
+from results import Result
 
 from currency_convert.domain.agency.entities.agency import Agency, UnprocessedRate
 from currency_convert.domain.agency.valueobjects.currency import Currency
@@ -76,7 +76,7 @@ def test_get_rate(agency: Agency) -> None:
     assert result.unwrap().rate == Money.create("0.85")
     result = agency.get_rate("EUR", "USD", "2023-10-01")
     assert result.is_ok()
-    assert result.unwrap().rate == Money.create("0.85")
+    assert result.unwrap().rate == Money.create("1.17647059")
 
 
 def test_list_rates(agency: Agency) -> None:
@@ -122,7 +122,7 @@ def test_get_rate_no_base_currency(agency: Agency) -> None:
         == Rate.create(
             currency_from="EUR",
             currency_to="JPY",
-            rate="127.5",
+            rate="176.47058850",
             iso_str="2023-10-01",
         ).unwrap()
     )

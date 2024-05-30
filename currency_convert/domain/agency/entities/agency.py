@@ -5,8 +5,7 @@ import logging
 import typing
 from typing import Never, Sequence
 
-from option import Option, Some
-from result import Err, Result
+from results import Err, Null, Option, Result, Some
 from typing_extensions import TypedDict
 
 from currency_convert.domain.agency.valueobjects.currency import Currency
@@ -53,11 +52,9 @@ class Agency(AggregateRoot):
         unprocessable = [
             rate
             for rate in rates
-            if Rate.create(
+            if self.add_rate(
                 rate["currency_from"], rate["currency_to"], rate["rate"], rate["date"]
-            )
-            .and_then(Result.as_result(self.rates.append))
-            .is_err()
+            ).is_err()
         ]
         return Result.Err(unprocessable) if unprocessable else Result.Ok(None)
 
@@ -65,40 +62,35 @@ class Agency(AggregateRoot):
         self, currency_from: str, currency_to: str, date: str
     ) -> Result[Rate, GenericError]:
         if currency_from == self.base.code:
+            return self.iter(lambda r: r.currency_to == currency_to).ok_or_else(
+                GenericError
+            )
+        elif currency_to == self.base:
             return (
-                self.iter(lambda _: True)
-                .filter(lambda r: r.currency_to.code == currency_to)
+                self.iter(lambda r: r.currency_to == currency_from)
+                .and_then(lambda r: r.invert_rate().ok())
                 .ok_or_else(GenericError)
             )
-        elif currency_to == self.base.code:
+        else:
             return (
-                self.iter(lambda _: True)
-                .filter(lambda r: r.currency_to.code == currency_from)
-                .map(lambda r: r.invert_rate())
-                .map_or_else(
-                    lambda: Err(GenericError()), lambda r: r.map_err(GenericError)
+                self.iter(lambda r: r.currency_to == currency_from)
+                .ok_or_else(GenericError)
+                .and_then(lambda r: r.invert_rate().map_err(GenericError))
+                .and_then(
+                    lambda rf: self.iter(lambda r: r.currency_to == currency_to)
+                    .ok_or_else(GenericError)
+                    .and_then(lambda rt: rt.multiply(rf).map_err(GenericError))
                 )
             )
-        else:
-            if (
-                rate_from := self.iter(lambda r: r.currency_to.code == currency_from)
-            ).is_null():
-                return rate_from.ok_or_else(GenericError)
-
-            if (
-                rate_to := self.iter(lambda r: r.currency_to.code == currency_to)
-            ).is_null():
-                return rate_to.ok_or_else(GenericError)
-
-            return rate_from.map(
-                Result.as_result(rate_to.unwrap().multiply)
-            ).map_or_else(lambda: Err(GenericError()), lambda r: r)
 
     def iter(
         self,
         predicate: typing.Callable[[Rate], bool],
     ) -> Option[Rate, typing.Any]:
-        return next(Some(r) for r in self.rates if predicate(r))
+        try:
+            return next(Some(r) for r in self.rates if predicate(r))
+        except StopIteration:
+            return Null(None)
 
     @Result.as_result
     def list_rates(self) -> Sequence[Rate]:
