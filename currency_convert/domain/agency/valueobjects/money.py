@@ -37,6 +37,8 @@ class Money(ValueObject[decimal.Decimal]):
 
     @classmethod
     def create(cls, value: _Decimal) -> Result[typing.Self, ValueObjectError]:
+        if isinstance(value, Money):
+            value = next(value.get_values())
         try:
             v = decimal.Decimal(value).quantize(cls.PRECISION)
         except decimal.DecimalException as exc:

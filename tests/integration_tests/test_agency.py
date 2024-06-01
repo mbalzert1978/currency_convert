@@ -33,7 +33,6 @@ class FakeRatesRepository:
 
 @pytest.fixture
 def agency() -> Agency:
-    repository = FakeRatesRepository()
     return Agency(
         address="https://test.com",
         id_=uuid.uuid4(),

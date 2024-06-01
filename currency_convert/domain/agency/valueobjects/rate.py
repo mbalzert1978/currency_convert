@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import typing
+from functools import partial
 from typing import Iterator
 
 from results import Result
@@ -42,26 +43,25 @@ class Rate(ValueObject[Currency | Money | datetime.datetime]):
         iso_str: str,
     ) -> Result[typing.Self, ValueObjectError]:
         def create_currency_pair(
-            cf: Currency,
+            currency: Currency,
         ) -> Result[tuple[Currency, Currency], ValueObjectError]:
-            return Currency.create(currency_to).map(lambda ct: (cf, ct))
+            return Currency.create(currency_to).map(lambda ct: (currency, ct))
 
         def create_rate(
-            cf_ct: tuple[Currency, Currency],
+            currencies: tuple[Currency, Currency],
         ) -> Result[tuple[Currency, Currency, Money], ValueObjectError]:
-            return Money.create(rate).map(lambda r: (*cf_ct, r))
+            return Money.create(rate).map(lambda m: (*currencies, m))
 
         def create_datetime(
-            cf_ct_r: tuple[Currency, Currency, Money],
+            rate: tuple[Currency, Currency, Money],
         ) -> Result[
             tuple[Currency, Currency, Money, datetime.datetime],
             ValueObjectError,
         ]:
-            from_iso = datetime.datetime.fromisoformat
             return (
-                Result.as_result(from_iso)(iso_str)
+                Result.as_result(datetime.datetime.fromisoformat)(iso_str)
                 .map_err(lambda exc: InvalidDateError.from_exc(exc))  # type: ignore [return-value]
-                .map(lambda dt: (*cf_ct_r, dt))
+                .map(lambda dt: (*rate, dt))
             )
 
         return (
@@ -69,28 +69,28 @@ class Rate(ValueObject[Currency | Money | datetime.datetime]):
             .and_then(create_currency_pair)
             .and_then(create_rate)
             .and_then(create_datetime)
-            .map(lambda cf_ct_r_dt: cls(*cf_ct_r_dt))
+            .map(lambda rate: cls(*rate))
         )
 
     def multiply(self, other: Rate) -> Result[Rate, ValueObjectError]:
-        calculation = next(self.rate.get_values()) * next(other.rate.get_values())
-        return Money.create(calculation).and_then(
-            lambda m: Rate.create(
+        multiplication = next(self.rate.get_values()) * next(other.rate.get_values())
+        return Money.create(multiplication).and_then(
+            partial(
+                Rate.create,
                 other.currency_from.code,
                 self.currency_to.code,
-                next(m.get_values()),
-                self.date.isoformat(),
+                iso_str=self.date.isoformat(),
             )
         )
 
     def invert(self) -> Result[Rate, ValueObjectError]:
-        calculation = 1 / next(self.rate.get_values())
-        return Money.create(calculation).and_then(
-            lambda m: Rate.create(
+        inversion = 1 / next(self.rate.get_values())
+        return Money.create(inversion).and_then(
+            partial(
+                Rate.create,
                 self.currency_to.code,
                 self.currency_from.code,
-                next(m.get_values()),
-                self.date.isoformat(),
+                iso_str=self.date.isoformat(),
             )
         )
 
