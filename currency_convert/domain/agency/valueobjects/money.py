@@ -9,9 +9,7 @@ from results import Result
 
 from currency_convert.domain.primitives.valueobject import ValueObject, ValueObjectError
 
-_Decimal: typing.TypeAlias = (
-    decimal.Decimal | float | str | tuple[int, typing.Sequence[int], int]
-)
+_Decimal = decimal.Decimal | float | str | tuple[int, typing.Sequence[int], int]
 
 
 class MoneyError(ValueObjectError):
@@ -37,8 +35,6 @@ class Money(ValueObject[decimal.Decimal]):
 
     @classmethod
     def create(cls, value: _Decimal) -> Result[typing.Self, ValueObjectError]:
-        if isinstance(value, Money):
-            value = next(value.get_values())
         try:
             v = decimal.Decimal(value).quantize(cls.PRECISION)
         except decimal.DecimalException as exc:
@@ -46,30 +42,14 @@ class Money(ValueObject[decimal.Decimal]):
         else:
             if cls.is_positive(v):
                 return Result.Ok(cls(v))
-            err = NegativeError(cls.ERROR_MSG.format(value=value))
-            return Result.Err(err)
+            return Result.Err(NegativeError(cls.ERROR_MSG.format(value=value)))
 
     @classmethod
     def is_positive(cls, value: decimal.Decimal) -> bool:
         return value > decimal.Decimal(0)
 
-    def __add__(self, other: Money) -> Money:
-        return Money(self.value + other.value)
+    def invert(self) -> _Decimal:
+        return 1 / self.value
 
-    def __sub__(self, other: Money) -> Money:
-        return Money(self.value - other.value)
-
-    def __mul__(self, other: Money) -> Money:
-        return Money(self.value * other.value)
-
-    def __truediv__(self, other: Money) -> Money:
-        return Money(self.value / other.value)
-
-    def __floordiv__(self, other: Money) -> Money:
-        return Money(self.value // other.value)
-
-    def __mod__(self, other: Money) -> Money:
-        return Money(self.value % other.value)
-
-    def __pow__(self, other: Money) -> Money:
-        return Money(self.value**other.value)
+    def multiply(self, other: Money) -> _Decimal:
+        return self.value * other.value

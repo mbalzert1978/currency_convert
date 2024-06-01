@@ -3,7 +3,6 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import typing
-from functools import partial
 from typing import Iterator
 
 from results import Result
@@ -73,26 +72,17 @@ class Rate(ValueObject[Currency | Money | datetime.datetime]):
         )
 
     def multiply(self, other: Rate) -> Result[Rate, ValueObjectError]:
-        multiplication = next(self.rate.get_values()) * next(other.rate.get_values())
-        return Money.create(multiplication).and_then(
-            partial(
-                Rate.create,
-                other.currency_from.code,
-                self.currency_to.code,
-                iso_str=self.date.isoformat(),
-            )
+        return self.create(
+            other.currency_from.code,
+            self.currency_to.code,
+            self.rate.multiply(other.rate),
+            self.date.isoformat(),
         )
 
     def invert(self) -> Result[Rate, ValueObjectError]:
-        inversion = 1 / next(self.rate.get_values())
-        return Money.create(inversion).and_then(
-            partial(
-                Rate.create,
-                self.currency_to.code,
-                self.currency_from.code,
-                iso_str=self.date.isoformat(),
-            )
+        return self.create(
+            self.currency_to.code,
+            self.currency_from.code,
+            self.rate.invert(),
+            self.date.isoformat(),
         )
-
-    def get_rate(self) -> Money:
-        return self.rate
