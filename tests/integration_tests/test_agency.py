@@ -5,7 +5,11 @@ from typing import Sequence
 import pytest
 from results import Result
 
-from currency_convert.domain.agency.entities.agency import Agency, UnprocessedRate
+from currency_convert.domain.agency.entities.agency import (
+    Agency,
+    RateNotFoundError,
+    UnprocessedRate,
+)
 from currency_convert.domain.agency.valueobjects.currency import Currency
 from currency_convert.domain.agency.valueobjects.money import Money
 from currency_convert.domain.agency.valueobjects.rate import Rate
@@ -71,12 +75,16 @@ def test_add_rates(agency: Agency) -> None:
 
 def test_get_rate(agency: Agency) -> None:
     agency.add_rate("USD", "EUR", "0.85", "2023-10-01T00:00:00")
+    agency.add_rate("USD", "EUR", "0.95", "2023-10-02T00:00:00")
     result = agency.get_rate("USD", "EUR", "2023-10-01T00:00:00")
     assert result.is_ok()
     assert result.unwrap().rate == Money.create("0.85").unwrap()
     result = agency.get_rate("EUR", "USD", "2023-10-01T00:00:00")
     assert result.is_ok()
     assert result.unwrap().rate == Money.create("1.17647059").unwrap()
+    result = agency.get_rate("USD", "JPY", "2023-10-01T00:00:00")
+    assert result.is_err()
+    assert isinstance(result.unwrap_err(), RateNotFoundError)
 
 
 def test_list_rates(agency: Agency) -> None:

@@ -5,9 +5,8 @@ import logging
 import typing
 from datetime import datetime
 from functools import partial
-from typing import Sequence
 
-from results import Null, Option, Result, Some
+from results import Null, Result, Some
 from typing_extensions import TypedDict
 
 from currency_convert.domain.agency.valueobjects.currency import Currency
@@ -98,53 +97,58 @@ class Agency(AggregateRoot):
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> Result[Rate, RateNotFoundError]:
+        def filter_on(
+            currency: str,
+            start_date: str,
+            end_date: str,
+            r: Some[Rate],
+        ) -> bool:
+            return r.is_some_and(
+                lambda r: (
+                    r.currency_to == currency
+                    and start_date <= r.date.isoformat() <= end_date
+                )
+            )
+
+        def fetch_one(
+            currency: str,
+            start_date: str,
+            end_date: str,
+        ) -> Result[Rate, RateNotFoundError]:
+            fn = partial(filter_on, currency, start_date, end_date)
+            return (
+                Result.as_result(lambda it: next(it))(filter(fn, self.iter()))
+                .and_then(lambda sr: sr.ok_or_else(RateNotFoundError))
+                .map_err(RateNotFoundError)
+            )
+
         if start_date is None:
             start_date = datetime.now().isoformat()
         if end_date is None:
             end_date = datetime.now().isoformat()
 
-        def filter_on(currency: str, start_date: str, end_date: str, r: Rate) -> bool:
-            return (
-                r.currency_to == currency
-                and start_date <= r.date.isoformat() <= end_date
-            )
-
-        def find_rate(
-            currency: str,
-            start_date: str,
-            end_date: str,
-        ) -> Result[Rate, RateNotFoundError]:
-            f = partial(filter_on, currency, start_date, end_date)
-            return self.iter(f).ok_or_else(RateNotFoundError)
-
         if self.is_base_currency(currency_from):
-            return find_rate(currency_to, start_date, end_date)
+            return fetch_one(currency_to, start_date, end_date)
         if self.is_base_currency(currency_to):
             return (
-                find_rate(currency_from, start_date, end_date)
+                fetch_one(currency_from, start_date, end_date)
                 .and_then(Rate.invert)  # type: ignore [arg-type]
                 .map_err(RateNotFoundError)
             )
         return (
-            find_rate(currency_from, start_date, end_date)
+            fetch_one(currency_from, start_date, end_date)
             .and_then(Rate.invert)  # type: ignore [arg-type]
             .and_then(
-                lambda rf: find_rate(currency_to, start_date, end_date).and_then(
+                lambda rf: fetch_one(currency_to, start_date, end_date).and_then(
                     partial(Rate.multiply, other=rf)  # type: ignore [arg-type]
                 )
             )
-        ).map_err(RateNotFoundError)
+        ).map_err(RateNotFoundError.from_exc)
 
-    def iter(
-        self,
-        predicate: typing.Callable[[Rate], bool],
-    ) -> Option[Rate, typing.Any]:
-        try:
-            return next(Some(r) for r in self.rates if predicate(r))
-        except StopIteration:
-            return Null(None)
+    def iter(self) -> typing.Iterator[Some[Rate]]:
+        return (Some(r) for r in self.rates)
 
-    def list_rates(self) -> Result[Sequence[Rate], AgencyError]:
+    def list_rates(self) -> Result[typing.Sequence[Some[Rate]], AgencyError]:
         return Result.as_result(tuple)(self.rates).map_err(AgencyError)  # type: ignore [return-value, arg-type]
 
     def is_base_currency(self, currency: str) -> bool:
