@@ -8,10 +8,9 @@ from tests.data import INSERTS
 
 
 def test_query_one_rate(MemoryAgencyRepository: AgencyRepository) -> None:
-    expected = Rate.from_attributes(None,*INSERTS[0].values())
+    expected = Rate.from_attributes(None, *INSERTS[0].values())
     cmd = FetchOne("EZB", "EUR", "USD", "2020-01-01")
     handler = FetchOneHandler(MemoryAgencyRepository)
     result = handler.execute(cmd)
     assert result.is_ok()
     assert result.unwrap() == expected
-
