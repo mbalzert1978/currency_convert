@@ -2,7 +2,10 @@ from currency_convert.application.agency.commands.update.command import (
     UpdatebyName,
     UpdatebyId,
 )
-from currency_convert.application.agency.commands.update.handler import UpdateHandler
+from currency_convert.application.agency.commands.update.handler import (
+    ByIdUpdateHandler,
+    ByNameUpdateHandler,
+)
 from currency_convert.domain.agency.entities.interface import (
     AgencyRepository,
     UpdateStrategy,
@@ -10,26 +13,28 @@ from currency_convert.domain.agency.entities.interface import (
 
 
 def test_update_command_by_name(
-    MemoryStrategy: UpdateStrategy, MemoryAgencyRepository: AgencyRepository
+    MemoryStrategy: UpdateStrategy, EmptyAgencyRepository: AgencyRepository
 ) -> None:
     cmd = UpdatebyName(MemoryStrategy, "EZB")
-    handler = UpdateHandler(MemoryAgencyRepository)
+    handler = ByNameUpdateHandler(EmptyAgencyRepository)
 
-    result = handler.by_name(cmd)
-    in_db = MemoryAgencyRepository.find_by_name("EZB").unwrap()
+    result = handler.execute(cmd)
+
+    in_db = EmptyAgencyRepository.find_by_name("EZB").unwrap()
     assert result.is_ok()
     assert len(in_db.rates) == 3
 
 
 def test_update_command_by_id(
-    MemoryStrategy: UpdateStrategy, MemoryAgencyRepository: AgencyRepository
+    MemoryStrategy: UpdateStrategy, EmptyAgencyRepository: AgencyRepository
 ) -> None:
-    first = next(iter(MemoryAgencyRepository.find_all().unwrap()))
+    first = next(iter(EmptyAgencyRepository.find_all().unwrap()))
 
     cmd = UpdatebyId(MemoryStrategy, first.id.hex)
-    handler = UpdateHandler(MemoryAgencyRepository)
+    handler = ByIdUpdateHandler(EmptyAgencyRepository)
 
-    result = handler.by_id(cmd)
-    in_db = MemoryAgencyRepository.find_by_name("EZB").unwrap()
+    result = handler.execute(cmd)
+
+    in_db = EmptyAgencyRepository.find_by_name("EZB").unwrap()
     assert result.is_ok()
     assert len(in_db.rates) == 3

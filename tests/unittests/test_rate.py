@@ -10,8 +10,8 @@ def test_create__when_all_parameters_are_valid_should_return_rate_instance() -> 
     result = Rate.create("USD", "EUR", "0.85", "2023-10-01T00:00:00")
     assert result.is_ok()
     rate = result.unwrap()
-    assert rate.currency_from == Currency("USD")
-    assert rate.currency_to == Currency("EUR")
+    assert rate.currency_from == Currency(code="USD")
+    assert rate.currency_to == Currency(code="EUR")
     assert rate.rate == Money.create("0.85").unwrap()
     assert rate.date == datetime.datetime(2023, 10, 1, 0, 0, 0)
 

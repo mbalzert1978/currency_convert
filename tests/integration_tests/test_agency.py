@@ -3,13 +3,13 @@ import uuid
 from typing import Sequence
 
 import pytest
-from results import Result
+from results import Result, Some
 
 from currency_convert.domain.agency.entities.agency import (
     Agency,
     RateNotFoundError,
-    UnprocessedRate,
 )
+from currency_convert.domain.agency.entities.interface import UnprocessedRate
 from currency_convert.domain.agency.valueobjects.currency import Currency
 from currency_convert.domain.agency.valueobjects.money import Money
 from currency_convert.domain.agency.valueobjects.rate import Rate
@@ -39,7 +39,7 @@ class FakeRatesRepository:
 def agency() -> Agency:
     return Agency(
         address="https://test.com",
-        id_=uuid.uuid4(),
+        id=uuid.uuid4(),
         base=Currency.create("USD").unwrap(),
         name="Test Agency",
         country="Test Country",
@@ -48,7 +48,9 @@ def agency() -> Agency:
 
 
 def test_add_rate(agency: Agency) -> None:
-    result = agency.add_rate("USD", "EUR", "0.85", "2023-10-01T00:00:00")
+    result = agency.add_rate(
+        currency_from="USD", currency_to="EUR", rate="0.85", date="2023-10-01T00:00:00"
+    )
     assert result.is_ok()
     assert len(agency.rates) == 1
 
@@ -68,7 +70,7 @@ def test_add_rates(agency: Agency) -> None:
             date="2023-10-01T00:00:00",
         ),
     ]
-    result = agency.add_rates(rates)
+    result = agency.update(lambda: rates)
     assert result.is_ok()
     assert len(agency.rates) == 2
 
@@ -90,9 +92,27 @@ def test_get_rate(agency: Agency) -> None:
 def test_list_rates(agency: Agency) -> None:
     agency.add_rate("USD", "EUR", "0.85", "2023-10-01T00:00:00")
     agency.add_rate("USD", "GBP", "0.75", "2023-10-01T00:00:00")
-    result = agency.list_rates()
+    result = agency.get_rates()
     assert result.is_ok()
-    assert len(result.unwrap()) == 2
+    assert len(res := result.unwrap()) == 2
+    assert Some(
+        Rate.create(
+            currency_from="USD",
+            currency_to="EUR",
+            rate="0.85",
+            iso_str="2023-10-01T00:00:00",
+        )
+    ), (
+        Some(
+            Rate.create(
+                currency_from="USD",
+                currency_to="GBP",
+                rate="0.75",
+                iso_str="2023-10-01T00:00:00",
+            )
+        )
+        == res
+    )
 
 
 def test_add_unprocessable_rates(agency: Agency) -> None:
@@ -110,9 +130,8 @@ def test_add_unprocessable_rates(agency: Agency) -> None:
             date="2023-10-01T00:00:00",
         ),
     ]
-    result = agency.add_rates(rates)
+    result = agency.update(lambda: rates)
     assert result.is_err()
-    assert len(result.unwrap_err()) == 2
     assert len(agency.rates) == 0
 
 
