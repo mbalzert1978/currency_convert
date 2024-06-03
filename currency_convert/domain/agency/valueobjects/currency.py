@@ -14,11 +14,11 @@ class CurrencyError(ValueObjectError):
     """Base class for errors related to Currency."""
 
 
-class FormatError(CurrencyError):
-    """Format error."""
+class InvalidCurrencyError(CurrencyError):
+    """Error raised when an invalid currency is provided."""
 
 
-@dataclasses.dataclass(frozen=True, slots=True, eq=False)
+@dataclasses.dataclass(frozen=True, slots=True, eq=False, kw_only=True)
 class Currency(ValueObject[str]):
     VALID_LENGTH: typing.ClassVar[int] = 3
     ERROR_MSG: typing.ClassVar[str] = (
@@ -31,10 +31,10 @@ class Currency(ValueObject[str]):
         return isinstance(other, (str, Currency)) and self.code == other
 
     @classmethod
-    def create(cls, code: str) -> Result[typing.Self, ValueObjectError]:
+    def create(cls, code: str) -> Result[typing.Self, InvalidCurrencyError]:
         if cls.has_valid_length(code):
-            return Result.Ok(cls(code))
-        return Result.Err(FormatError(cls.ERROR_MSG.format(code=code)))
+            return Result.Ok(cls(code=code))
+        return Result.Err(InvalidCurrencyError(cls.ERROR_MSG.format(code=code)))
 
     @classmethod
     def has_valid_length(cls, code: typing.Sized) -> bool:

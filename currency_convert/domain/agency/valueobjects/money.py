@@ -24,7 +24,7 @@ class NegativeError(MoneyError):
     """Negative error."""
 
 
-@dataclasses.dataclass(frozen=True, slots=True, eq=False)
+@dataclasses.dataclass(frozen=True, slots=True, eq=False, kw_only=True)
 class Money(ValueObject[decimal.Decimal]):
     PRECISION: typing.ClassVar[decimal.Decimal] = decimal.Decimal(10) ** -8
     ERROR_MSG: typing.ClassVar[str] = "Money value must be positive. Got: {{value}}"
@@ -34,14 +34,16 @@ class Money(ValueObject[decimal.Decimal]):
         yield self.value
 
     @classmethod
-    def create(cls, value: _Decimal) -> Result[typing.Self, ValueObjectError]:
+    def create(
+        cls, value: _Decimal
+    ) -> Result[typing.Self, FormatError | NegativeError]:
         try:
             v = decimal.Decimal(value).quantize(cls.PRECISION)
         except decimal.DecimalException as exc:
             return Result.Err(FormatError.from_exc(exc))
         else:
             if cls.is_positive(v):
-                return Result.Ok(cls(v))
+                return Result.Ok(cls(value=v))
             return Result.Err(NegativeError(cls.ERROR_MSG.format(value=value)))
 
     @classmethod
