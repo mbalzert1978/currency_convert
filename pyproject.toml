@@ -10,6 +10,7 @@ python = "^3.11"
 pydantic = "^2.6.1"
 pydantic-settings = "^2.2.0"
 results = {git = "https://github.com/mbalzert1978/results.git"}
+sqlalchemy = "^2.0.30"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.5"
