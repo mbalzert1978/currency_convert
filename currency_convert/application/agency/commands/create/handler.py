@@ -9,7 +9,7 @@ class CreateAgencyHandler:
     def __init__(self, repository: AgencyRepository) -> None:
         self.repository = repository
 
-    def __call__(self, cmd: CreateAgency) -> Result[Agency, AgencyCreationError]:
+    def execute(self, cmd: CreateAgency) -> Result[Agency, AgencyCreationError]:
         if self.repository.find_by_name(cmd.name).is_ok():
             return Result.Err(AgencyCreationError("Agency already exists"))
 
