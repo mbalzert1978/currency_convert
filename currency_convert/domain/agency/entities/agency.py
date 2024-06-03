@@ -71,9 +71,9 @@ class Agency(AggregateRoot):
         return (
             Currency.create(base)
             .map(
-                lambda bc: cls(
+                lambda base: cls(
                     id=uuid.uuid4(),
-                    base=bc,
+                    base=base,
                     name=name,
                     address=address,
                     country=country,
