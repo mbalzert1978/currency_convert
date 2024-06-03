@@ -1,64 +1,86 @@
 from __future__ import annotations
 
 import dataclasses
-import logging
 import typing
+import uuid
 from datetime import datetime
 from functools import partial
 
-from results import Null, Result, Some
-from typing_extensions import TypedDict
+from results import Err, Null, Ok, Result
 
 from currency_convert.domain.agency.valueobjects.currency import Currency
 from currency_convert.domain.agency.valueobjects.money import _Decimal
 from currency_convert.domain.agency.valueobjects.rate import Rate
 from currency_convert.domain.primitives.entity import AggregateRoot, EntityError
 
-_logger = logging.getLogger(__name__)
+if typing.TYPE_CHECKING:
+    from currency_convert.domain.agency.entities.interface import UpdateStrategy
 
 
-class AgencyError(EntityError):
-    """Base class for errors related to Agency."""
+class AgencyCreationError(EntityError):
+    """Error raised when an agency cannot be created."""
 
 
-class AgencyNotFoundError(AgencyError):
+class AgencyNotFoundError(EntityError):
     """Error raised when an agency is not found."""
 
 
-class DuplicateRateError(AgencyError):
+class DuplicateRateError(EntityError):
     """Error raised when a duplicate rate is added to an agency."""
 
 
-class InvalidRateError(AgencyError):
-    """Error raised when an invalid rate is provided."""
-
-
-class InvalidCurrencyError(AgencyError):
-    """Error raised when an invalid currency is provided."""
-
-
-class RateNotFoundError(AgencyError):
+class RateNotFoundError(EntityError):
     """Error raised when a rate is not found for the given criteria."""
 
 
-class UnprocessedRate(TypedDict):
-    currency_from: str
-    currency_to: str
-    rate: _Decimal
-    date: str
-
-
-class UnprocessableRate(UnprocessedRate):
-    pass
+class UpdateError(EntityError):
+    """Error raised when an agency cannot be updated."""
 
 
 @dataclasses.dataclass(slots=True, eq=False)
 class Agency(AggregateRoot):
-    base: Currency
     name: str
+    base: Currency
     address: str
     country: str
     rates: list[Rate] = dataclasses.field(default_factory=list)
+
+    @classmethod
+    def from_attributes(
+        cls,
+        id: str,
+        base: str,
+        name: str,
+        address: str,
+        country: str,
+        rates: list[Rate],
+    ) -> typing.Self:
+        return cls(
+            id=uuid.UUID(id),
+            base=Currency.create(base).unwrap(),
+            name=name,
+            address=address,
+            country=country,
+            rates=rates,
+        )
+
+    @classmethod
+    def create(
+        cls, base: str, name: str, address: str, country: str
+    ) -> Result[Agency, AgencyCreationError]:
+        return (
+            Currency.create(base)
+            .map(
+                lambda bc: cls(
+                    id=uuid.uuid4(),
+                    base=bc,
+                    name=name,
+                    address=address,
+                    country=country,
+                )
+            )
+            .map_err(AgencyCreationError.from_exc)
+        )
 
     def add_rate(
         self,
@@ -70,25 +92,26 @@ class Agency(AggregateRoot):
         return (
             Rate.create(currency_from, currency_to, rate, date)
             .and_then(Result.as_result(self.rates.append))
-            .map_err(lambda exc: DuplicateRateError.from_exc(exc))
+            .map_err(DuplicateRateError.from_exc)
             .map(Null)
         )
 
-    def add_rates(
+    def update(
         self,
-        rates: list[UnprocessedRate],
-    ) -> Result[Null[None], list[UnprocessableRate]]:
-        unprocessable = [
-            rate
-            for rate in rates
-            if self.add_rate(
+        rate_strategy: UpdateStrategy,
+    ) -> Result[Agency, UpdateError]:
+        for rate in rate_strategy():
+            match self.add_rate(
                 rate["currency_from"],
                 rate["currency_to"],
                 rate["rate"],
                 rate["date"],
-            ).is_err()
-        ]
-        return Result.Err(unprocessable) if unprocessable else Result.Ok(Null(None))
+            ):
+                case Ok(_):
+                    continue
+                case Err(exc):
+                    return Err(UpdateError.from_exc(exc))
+        return Ok(self)
 
     def get_rate(
         self,
@@ -101,55 +124,47 @@ class Agency(AggregateRoot):
             currency: str,
             start_date: str,
             end_date: str,
-            r: Some[Rate],
+            r: Rate,
         ) -> bool:
-            return r.is_some_and(
-                lambda r: (
-                    r.currency_to == currency
-                    and start_date <= r.date.isoformat() <= end_date
-                )
+            return (
+                r.currency_to == currency
+                and start_date <= r.date.isoformat() <= end_date
             )
 
         def fetch_one(
             currency: str,
             start_date: str,
             end_date: str,
-        ) -> Result[Rate, RateNotFoundError]:
+        ) -> Result[Rate, Exception]:
             fn = partial(filter_on, currency, start_date, end_date)
-            return (
-                Result.as_result(lambda it: next(it))(filter(fn, self.iter()))
-                .and_then(lambda sr: sr.ok_or_else(RateNotFoundError))
-                .map_err(RateNotFoundError)
+            return Result.from_fn(next, filter(fn, self.rates))
+
+        start_date = start_date or datetime.now().isoformat()
+        end_date = end_date or datetime.now().isoformat()
+
+        if self._is_base_currency(currency_from):
+            return fetch_one(currency_to, start_date, end_date).map_err(
+                RateNotFoundError.from_exc
             )
-
-        if start_date is None:
-            start_date = datetime.now().isoformat()
-        if end_date is None:
-            end_date = datetime.now().isoformat()
-
-        if self.is_base_currency(currency_from):
-            return fetch_one(currency_to, start_date, end_date)
-        if self.is_base_currency(currency_to):
+        if self._is_base_currency(currency_to):
             return (
                 fetch_one(currency_from, start_date, end_date)
-                .and_then(Rate.invert)  # type: ignore [arg-type]
-                .map_err(RateNotFoundError)
+                .and_then(Rate.invert)  # type: ignore[arg-type]
+                .map_err(RateNotFoundError.from_exc)
             )
         return (
             fetch_one(currency_from, start_date, end_date)
-            .and_then(Rate.invert)  # type: ignore [arg-type]
+            .and_then(Rate.invert)  # type: ignore[arg-type]
             .and_then(
                 lambda rf: fetch_one(currency_to, start_date, end_date).and_then(
-                    partial(Rate.multiply, other=rf)  # type: ignore [arg-type]
+                    partial(Rate.multiply, other=rf)  # type: ignore[arg-type]
                 )
             )
         ).map_err(RateNotFoundError.from_exc)
 
-    def iter(self) -> typing.Iterator[Some[Rate]]:
-        return (Some(r) for r in self.rates)
+    def get_rates(self) -> Result[tuple[Rate, ...], Exception]:
+        result: Result[tuple[Rate, ...], Exception] = Result.from_fn(tuple, self.rates)
+        return result
 
-    def list_rates(self) -> Result[typing.Sequence[Some[Rate]], AgencyError]:
-        return Result.as_result(tuple)(self.rates).map_err(AgencyError)  # type: ignore [return-value, arg-type]
-
-    def is_base_currency(self, currency: str) -> bool:
+    def _is_base_currency(self, currency: str) -> bool:
         return currency == self.base
