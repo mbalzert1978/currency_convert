@@ -15,6 +15,8 @@ class ValueObjectError(ConverterError):
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class ValueObject(abc.ABC, typing.Generic[T]):
+    id: int | None = dataclasses.field(default=None, repr=False)
+
     @abc.abstractmethod
     def get_values(self) -> typing.Iterator[T]:
         raise NotImplementedError
