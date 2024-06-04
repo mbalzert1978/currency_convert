@@ -16,10 +16,7 @@ router = APIRouter()
 
 
 @router.get("/{agency_name}/rates", response_model=Products[Rate])
-def api_get_rates(
-    agency_name: str,
-    handler: FetchAllDep[FetchAll, tuple[Rate, ...], AgencyNotFoundError],
-) -> Products[Rate]:
+def api_get_rates(agency_name: str, handler: FetchAllDep) -> Products[Rate]:
     cmd = FetchAll(agency_name=agency_name)
     match handler.execute(cmd):
         case Ok(rates):
