@@ -37,11 +37,15 @@ class AgencyRepo:
         )
 
     def save(self, agency: Agency) -> Result[Agency, Exception]:
-        try:
-            self.session.merge(AgencyMapper.into_db(agency))
-            self.session.commit()
-        except Exception as exc:
-            self.session.rollback()
-            return Result.Err(exc)
-        else:
-            return Result.Ok(agency)
+        def _rollback(exc: Exception) -> Exception:
+            if (err := Result.from_fn(self.session.rollback)).is_err():
+                return err.unwrap_err()
+            return exc
+
+        return (
+            Result.from_fn(AgencyMapper.into_db, agency)
+            .and_then(lambda mapped: Result.from_fn(self.session.merge, mapped))
+            .and_then(lambda _: Result.from_fn(self.session.commit))
+            .map(lambda _: agency)
+            .map_err(_rollback)
+        )
