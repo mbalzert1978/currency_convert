@@ -7,7 +7,7 @@ from currency_convert.domain.primitives.valueobject import ValueObjectError
 def test_create_ok() -> None:
     result = Money.create(100)
     assert result.is_ok()
-    assert result.unwrap() == Money(value=decimal.Decimal("100.00000000"))
+    assert result.unwrap() == Money(amount=decimal.Decimal("100.00000000"))
 
 
 def test_create_err_negative_value() -> None:

@@ -28,10 +28,10 @@ class NegativeError(MoneyError):
 class Money(ValueObject[decimal.Decimal]):
     PRECISION: typing.ClassVar[decimal.Decimal] = decimal.Decimal(10) ** -8
     ERROR_MSG: typing.ClassVar[str] = "Money value must be positive. Got: {{value}}"
-    value: decimal.Decimal
+    amount: decimal.Decimal
 
     def get_values(self) -> Iterator[decimal.Decimal]:
-        yield self.value
+        yield self.amount
 
     @classmethod
     def create(
@@ -43,7 +43,7 @@ class Money(ValueObject[decimal.Decimal]):
             return Result.Err(FormatError.from_exc(exc))
         else:
             if cls.is_positive(v):
-                return Result.Ok(cls(value=v))
+                return Result.Ok(cls(amount=v))
             return Result.Err(NegativeError(cls.ERROR_MSG.format(value=value)))
 
     @classmethod
@@ -51,7 +51,7 @@ class Money(ValueObject[decimal.Decimal]):
         return value > decimal.Decimal(0)
 
     def invert(self) -> _Decimal:
-        return 1 / self.value
+        return 1 / self.amount
 
     def multiply(self, other: Money) -> _Decimal:
-        return self.value * other.value
+        return self.amount * other.amount
