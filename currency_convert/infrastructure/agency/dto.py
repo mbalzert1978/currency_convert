@@ -2,12 +2,22 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+metadata = MetaData(
+    naming_convention={
+        "ix": "%(column_0_label)s_idx",
+        "uq": "%(table_name)s_%(column_0_name)s_key",
+        "ck": "%(table_name)s_%(constraint_name)s_check",
+        "fk": "%(table_name)s_%(column_0_name)s_fkey",
+        "pk": "%(table_name)s_pkey",
+    }
+)
 
 
 class Base(DeclarativeBase):
-    pass
+    metadata = metadata
 
 
 class Rate(Base):
