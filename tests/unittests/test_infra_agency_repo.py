@@ -54,4 +54,3 @@ def test_save_when_error_occurs_should__roll_back_and_return_error(
     assert result.is_err()
     assert str(result.unwrap_err()) == expected_error
     session.rollback.assert_called_once()
-

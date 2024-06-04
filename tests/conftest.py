@@ -42,7 +42,7 @@ def SessionFactory(MemoryEngine: Engine) -> Generator[sessionmaker[Session], Any
 @pytest.fixture()
 def EmptyAgencyRepository(SessionFactory: Callable[[], Session]) -> AgencyRepo:
     empty_memory_repo = AgencyRepo(SessionFactory())
-    
+
     CreateAgencyHandler(empty_memory_repo).execute(
         CreateAgency(
             name="EZB",
