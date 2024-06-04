@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from decimal import Decimal
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -27,5 +29,6 @@ class MappedAgency(Base):
     address: Mapped[str] = mapped_column()
     country: Mapped[str] = mapped_column()
     rates: Mapped[list[MappedRate]] = relationship(
-        back_populates="agency", cascade="all, delete-orphan"
+        back_populates="agency",
+        cascade="all, delete-orphan",
     )

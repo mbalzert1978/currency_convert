@@ -7,36 +7,38 @@ from currency_convert.domain.agency.entities.agency import (
     Agency,
     AgencyNotFoundError,
 )
-from currency_convert.infrastructure.db import MappedAgency
-from currency_convert.infrastructure.mapper import map_agency, map_mapped_agency
+from currency_convert.infrastructure.agency.db import MappedAgency
+from currency_convert.infrastructure.agency.mapper import AgencyMapper
 
 
 class AgencyRepo:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def find_by_id(self, agency_id: str) -> Result[Agency, AgencyNotFoundError]:
-        result = self.session.get(MappedAgency, agency_id)
-        if result is None:
-            return Result.Err(AgencyNotFoundError("Agency not found"))
-        return Result.Ok(map_mapped_agency(result))
+    def find_by_id(self, id: str) -> Result[Agency, AgencyNotFoundError]:
+        return (
+            Result.from_fn(self.session.query(MappedAgency).filter_by(id=id).one)
+            .and_then(lambda agency: Result.from_fn(AgencyMapper.from_db, agency))
+            .map_err(AgencyNotFoundError.from_exc)
+        )
 
     def find_by_name(self, name: str) -> Result[Agency, AgencyNotFoundError]:
-        result = self.session.query(MappedAgency).filter_by(name=name).first()
-        if result is None:
-            return Result.Err(AgencyNotFoundError("Agency not found"))
-        return Result.Ok(map_mapped_agency(result))
+        return (
+            Result.from_fn(self.session.query(MappedAgency).filter_by(name=name).one)
+            .and_then(lambda agency: Result.from_fn(AgencyMapper.from_db, agency))
+            .map_err(AgencyNotFoundError.from_exc)
+        )
 
     def find_all(self) -> Result[list[Agency], AgencyNotFoundError]:
         return (
             Result.from_fn(self.session.query(MappedAgency).all)
-            .map(lambda agencies: list(map_mapped_agency(a) for a in agencies))
+            .map(lambda agencies: list(AgencyMapper.from_db(a) for a in agencies))
             .map_err(AgencyNotFoundError.from_exc)
         )
 
     def save(self, agency: Agency) -> Result[Agency, Exception]:
-        self.session.merge(map_agency(agency))
         try:
+            self.session.merge(AgencyMapper.into_db(agency))
             self.session.commit()
         except Exception as exc:
             self.session.rollback()
