@@ -10,7 +10,7 @@ class Base(DeclarativeBase):
     pass
 
 
-class MappedRate(Base):
+class DTORate(Base):
     __tablename__ = "rates"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     currency_from: Mapped[str] = mapped_column()
@@ -18,17 +18,17 @@ class MappedRate(Base):
     rate: Mapped[Decimal] = mapped_column()
     date: Mapped[str] = mapped_column()
     agency_id: Mapped[str] = mapped_column(ForeignKey("agencies.id"))
-    agency: Mapped[MappedAgency] = relationship(back_populates="rates")
+    agency: Mapped[DTOAgency] = relationship(back_populates="rates")
 
 
-class MappedAgency(Base):
+class DTOAgency(Base):
     __tablename__ = "agencies"
     id: Mapped[str] = mapped_column(primary_key=True)
     base: Mapped[str] = mapped_column()
     name: Mapped[str] = mapped_column()
     address: Mapped[str] = mapped_column()
     country: Mapped[str] = mapped_column()
-    rates: Mapped[list[MappedRate]] = relationship(
+    rates: Mapped[list[DTORate]] = relationship(
         back_populates="agency",
         cascade="all, delete-orphan",
     )

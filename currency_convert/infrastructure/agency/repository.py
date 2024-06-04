@@ -7,7 +7,7 @@ from currency_convert.domain.agency.entities.agency import (
     Agency,
     AgencyNotFoundError,
 )
-from currency_convert.infrastructure.agency.db import MappedAgency
+from currency_convert.infrastructure.agency.db import DTOAgency
 from currency_convert.infrastructure.agency.mapper import AgencyMapper
 
 
@@ -17,21 +17,21 @@ class AgencyRepo:
 
     def find_by_id(self, id: str) -> Result[Agency, AgencyNotFoundError]:
         return (
-            Result.from_fn(self.session.query(MappedAgency).filter_by(id=id).one)
+            Result.from_fn(self.session.query(DTOAgency).filter_by(id=id).one)
             .and_then(lambda agency: Result.from_fn(AgencyMapper.from_db, agency))
             .map_err(AgencyNotFoundError.from_exc)
         )
 
     def find_by_name(self, name: str) -> Result[Agency, AgencyNotFoundError]:
         return (
-            Result.from_fn(self.session.query(MappedAgency).filter_by(name=name).one)
+            Result.from_fn(self.session.query(DTOAgency).filter_by(name=name).one)
             .and_then(lambda agency: Result.from_fn(AgencyMapper.from_db, agency))
             .map_err(AgencyNotFoundError.from_exc)
         )
 
     def find_all(self) -> Result[list[Agency], AgencyNotFoundError]:
         return (
-            Result.from_fn(self.session.query(MappedAgency).all)
+            Result.from_fn(self.session.query(DTOAgency).all)
             .map(lambda rows: list(AgencyMapper.from_db(agency) for agency in rows))
             .map_err(AgencyNotFoundError.from_exc)
         )

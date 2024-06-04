@@ -1,12 +1,12 @@
 from currency_convert.domain.agency.entities.agency import Agency
 from currency_convert.domain.agency.valueobjects.rate import Rate
-from currency_convert.infrastructure.agency.db import MappedAgency, MappedRate
+from currency_convert.infrastructure.agency.db import DTOAgency, DTORate
 
 
 class AgencyMapper:
     @staticmethod
-    def into_db(agency: Agency) -> MappedAgency:
-        return MappedAgency(
+    def into_db(agency: Agency) -> DTOAgency:
+        return DTOAgency(
             id=agency.id.hex,
             base=next(agency.base.get_values()),
             name=agency.name,
@@ -16,7 +16,7 @@ class AgencyMapper:
         )
 
     @staticmethod
-    def from_db(mapped: MappedAgency) -> Agency:
+    def from_db(mapped: DTOAgency) -> Agency:
         return Agency.from_attributes(
             mapped.id,
             mapped.base,
@@ -27,8 +27,8 @@ class AgencyMapper:
         )
 
     @staticmethod
-    def _into_db_rate(rate: Rate) -> MappedRate:
-        return MappedRate(
+    def _into_db_rate(rate: Rate) -> DTORate:
+        return DTORate(
             currency_from=next(rate.currency_from.get_values()),
             currency_to=next(rate.currency_to.get_values()),
             rate=next(rate.rate.get_values()),
@@ -36,7 +36,7 @@ class AgencyMapper:
         )
 
     @staticmethod
-    def _from_db_rate(mapped: MappedRate) -> Rate:
+    def _from_db_rate(mapped: DTORate) -> Rate:
         return Rate.from_attributes(
             mapped.id,
             mapped.currency_from,
