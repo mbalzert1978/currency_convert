@@ -8,9 +8,13 @@ from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from currency_convert.application.agency.commands.create.handler import (
+    CreateAgencyHandler,
+)
 from currency_convert.application.agency.queries.fetch_all.handler import (
     FetchAllHandler,
 )
+from currency_convert.application.primitives.command import CommandHandler
 from currency_convert.application.primitives.query import Query, QueryHandler
 from currency_convert.domain.agency.entities.interface import (
     AgencyRepository,
@@ -44,6 +48,12 @@ def get_agency_repository(
     return AgencyRepo(session)  # type: ignore [no-any-return]
 
 
+def get_creation_handler(
+    repo: Annotated[AgencyRepository, Depends(get_agency_repository)],
+) -> CreateAgencyHandler:
+    return CreateAgencyHandler(repo)
+
+
 def get_all_query_handler(
     repo: Annotated[AgencyRepository, Depends(get_agency_repository)],
 ) -> FetchAllHandler:
@@ -65,5 +75,6 @@ def get_agency_update_strategy(
     return EZBUpdateStrategy(handler, parser)
 
 
+CreationHandlerDep = Annotated[CommandHandler, Depends(get_creation_handler)]
 FetchAllDep = Annotated[QueryHandler, Depends(get_all_query_handler)]
 UpdateStrategyDep = Annotated[UpdateStrategy, Depends(get_agency_update_strategy)]
