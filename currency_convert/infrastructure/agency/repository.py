@@ -32,7 +32,7 @@ class AgencyRepo:
     def find_all(self) -> Result[list[Agency], AgencyNotFoundError]:
         return (
             Result.from_fn(self.session.query(MappedAgency).all)
-            .map(lambda agencies: list(AgencyMapper.from_db(a) for a in agencies))
+            .map(lambda rows: list(AgencyMapper.from_db(agency) for agency in rows))
             .map_err(AgencyNotFoundError.from_exc)
         )
 
