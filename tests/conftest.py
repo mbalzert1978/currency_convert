@@ -16,50 +16,47 @@ from currency_convert.application.agency.commands.update.handler import (
 )
 from currency_convert.infrastructure.memory.agency.memory import Base, MemoryAgency
 from currency_convert.infrastructure.update_strategies.ezb.memory import (
-    EzbMemoryUpdateStrategy,
+    MemoryUpdateStrategy,
 )
 from tests.data import INSERTS
 
 
 @pytest.fixture()
-def MemoryStrategy() -> EzbMemoryUpdateStrategy:
-    return EzbMemoryUpdateStrategy(INSERTS)
+def MemoryStrategy() -> MemoryUpdateStrategy:
+    return MemoryUpdateStrategy(INSERTS)
 
 
 @pytest.fixture
-def in_memory_sqlite_db() -> Engine:
-    engine = create_engine("sqlite:///:memory:")
+def MemoryEngine() -> Engine:
+    engine = create_engine("sqlite:///:memory:", echo=True)
     Base.metadata.create_all(engine)
     return engine
 
 
 @pytest.fixture
-def sqlite_session_factory(
-    in_memory_sqlite_db: Engine,
-) -> Generator[sessionmaker[Session], Any, None]:
-    yield sessionmaker(bind=in_memory_sqlite_db)
+def SessionFactory(MemoryEngine: Engine) -> Generator[sessionmaker[Session], Any, None]:
+    yield sessionmaker(bind=MemoryEngine)
 
 
 @pytest.fixture()
-def EmptyAgencyRepository(
-    sqlite_session_factory: Callable[[], Session],
-) -> MemoryAgency:
-    empty_memory_repo = MemoryAgency(sqlite_session_factory())
-    cmd = CreateAgency(
-        name="EZB",
-        base="EUR",
-        address="https://test.com",
-        country="Test Country",
+def EmptyAgencyRepository(SessionFactory: Callable[[], Session]) -> MemoryAgency:
+    empty_memory_repo = MemoryAgency(SessionFactory())
+    
+    CreateAgencyHandler(empty_memory_repo).execute(
+        CreateAgency(
+            name="EZB",
+            base="EUR",
+            address="https://test.com",
+            country="Test Country",
+        )
     )
-    handler = CreateAgencyHandler(empty_memory_repo)
-    handler.execute(cmd)
 
     return empty_memory_repo
 
 
 @pytest.fixture()
 def MemoryAgencyRepository(
-    EmptyAgencyRepository: MemoryAgency, MemoryStrategy: EzbMemoryUpdateStrategy
+    EmptyAgencyRepository: MemoryAgency, MemoryStrategy: MemoryUpdateStrategy
 ) -> MemoryAgency:
     cmd = UpdatebyName(MemoryStrategy, "EZB")
     handler = ByNameUpdateHandler(EmptyAgencyRepository)
