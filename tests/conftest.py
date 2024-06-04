@@ -14,7 +14,8 @@ from currency_convert.application.agency.commands.update.command import Updateby
 from currency_convert.application.agency.commands.update.handler import (
     ByNameUpdateHandler,
 )
-from currency_convert.infrastructure.memory.agency.memory import Base, MemoryAgency
+from currency_convert.infrastructure.db import Base
+from currency_convert.infrastructure.memory.agency.sqlalchemy import AgencyRepo
 from currency_convert.infrastructure.update_strategies.ezb.memory import (
     MemoryUpdateStrategy,
 )
@@ -39,8 +40,8 @@ def SessionFactory(MemoryEngine: Engine) -> Generator[sessionmaker[Session], Any
 
 
 @pytest.fixture()
-def EmptyAgencyRepository(SessionFactory: Callable[[], Session]) -> MemoryAgency:
-    empty_memory_repo = MemoryAgency(SessionFactory())
+def EmptyAgencyRepository(SessionFactory: Callable[[], Session]) -> AgencyRepo:
+    empty_memory_repo = AgencyRepo(SessionFactory())
     
     CreateAgencyHandler(empty_memory_repo).execute(
         CreateAgency(
@@ -56,8 +57,8 @@ def EmptyAgencyRepository(SessionFactory: Callable[[], Session]) -> MemoryAgency
 
 @pytest.fixture()
 def MemoryAgencyRepository(
-    EmptyAgencyRepository: MemoryAgency, MemoryStrategy: MemoryUpdateStrategy
-) -> MemoryAgency:
+    EmptyAgencyRepository: AgencyRepo, MemoryStrategy: MemoryUpdateStrategy
+) -> AgencyRepo:
     cmd = UpdatebyName(MemoryStrategy, "EZB")
     handler = ByNameUpdateHandler(EmptyAgencyRepository)
     handler.execute(cmd)
