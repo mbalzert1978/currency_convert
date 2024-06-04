@@ -43,7 +43,7 @@ class EZBUpdateStrategy:
         from_date: datetime.datetime | None = None,
     ) -> None:
         self._request_handler = request_handler
-        self._xml_parser = xml_parser
+        self._parser = xml_parser
         self._from_date = from_date or (
             datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=1)
         )
@@ -52,9 +52,9 @@ class EZBUpdateStrategy:
         url = f"{self.URL}/{self.RECOURCE}/{self.TYPE}/{self.KEY}"
         params = {"updatedAfter": self._from_date.isoformat()}
 
-        with self._request_handler as request_handler:
-            response = request_handler.get(url, params=params).raise_for_status()
-            data = self._xml_parser.parse(response.text)
+        with self._request_handler as session:
+            response = session.get(url, params=params).raise_for_status()
+            data = self._parser.parse(response.text)
             return self._match_data(data)
 
     def _match_data(self, data: dict[str, typing.Any]) -> list[UnprocessedRate]:
