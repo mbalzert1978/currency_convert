@@ -14,10 +14,10 @@ class ByNameUpdateHandler:
     def __init__(self, repository: AgencyRepository) -> None:
         self.repository = repository
 
-    def execute(self, query: UpdatebyName) -> Result[Agency, UpdateError]:
+    def execute(self, cmd: UpdatebyName) -> Result[Agency, UpdateError]:
         return (
-            self.repository.find_by_name(query.name)
-            .and_then(partial(Agency.update, rate_strategy=query.strategy))
+            self.repository.find_by_name(cmd.name)
+            .and_then(partial(Agency.update, rate_strategy=cmd.strategy))
             .and_then(self.repository.save)
             .map_err(UpdateError.from_exc)
         )
@@ -27,10 +27,10 @@ class ByIdUpdateHandler:
     def __init__(self, repository: AgencyRepository) -> None:
         self.repository = repository
 
-    def execute(self, query: UpdatebyId) -> Result[Agency, UpdateError]:
+    def execute(self, cmd: UpdatebyId) -> Result[Agency, UpdateError]:
         return (
-            self.repository.find_by_id(query.id)
-            .and_then(partial(Agency.update, rate_strategy=query.strategy))
+            self.repository.find_by_id(cmd.id)
+            .and_then(partial(Agency.update, rate_strategy=cmd.strategy))
             .and_then(self.repository.save)
             .map_err(UpdateError.from_exc)
         )
