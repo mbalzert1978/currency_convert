@@ -14,7 +14,7 @@ from currency_convert.application.agency.commands.update.command import Updateby
 from currency_convert.application.agency.commands.update.handler import (
     ByNameUpdateHandler,
 )
-from currency_convert.infrastructure.agency.db import Base
+from currency_convert.infrastructure.agency.dto import Base
 from currency_convert.infrastructure.agency.repository import AgencyRepo
 from currency_convert.infrastructure.update_strategies.ezb.memory import (
     MemoryUpdateStrategy,
