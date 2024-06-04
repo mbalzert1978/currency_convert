@@ -21,9 +21,9 @@ class Rate(BaseModel):
     iso_8601: str
 
 
-class Product(Generic[T], BaseModel):
+class Product(BaseModel, Generic[T]):
     data: T
 
 
-class Products(Generic[T], BaseModel):
+class Products(BaseModel, Generic[T]):
     data: list[T]
