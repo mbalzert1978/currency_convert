@@ -41,5 +41,5 @@ if not settings.ENVIRONMENT.is_debug:
 
 
 @lru_cache(maxsize=1)
-def get_app_settings() -> Config:
-    return settings
+def get_app_settings() -> tuple[Config, dict[str, Any]]:
+    return settings, app_configs
