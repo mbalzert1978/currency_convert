@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Any
 
 from pydantic import PostgresDsn, model_validator
@@ -37,3 +38,8 @@ if settings.ENVIRONMENT.is_deployed:
 
 if not settings.ENVIRONMENT.is_debug:
     app_configs["openapi_url"] = None  # hide docs
+
+
+@lru_cache(maxsize=1)
+def get_app_settings() -> Config:
+    return settings
