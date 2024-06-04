@@ -34,6 +34,7 @@ class EZBUpdateStrategy:
     RECOURCE: typing.ClassVar[str] = "data"
     TYPE: typing.ClassVar[str] = "EXR"
     KEY: typing.ClassVar[str] = "D..EUR.SP00.A"
+    ERR_MESSAGE: typing.ClassVar[str] = "Unexpected data structure: %s"
 
     def __init__(
         self,
@@ -54,25 +55,25 @@ class EZBUpdateStrategy:
         with self._request_handler as request_handler:
             response = request_handler.get(url, params=params).raise_for_status()
             data = self._xml_parser.parse(response.text)
-            return self._match_series(data)
+            return self._match_data(data)
 
-    def _match_series(self, data: dict[str, typing.Any]) -> list[UnprocessedRate]:
+    def _match_data(self, data: dict[str, typing.Any]) -> list[UnprocessedRate]:
         match data:
             case {
                 "message:GenericData": {
-                    "message:DataSet": {"generic:Series": list() as series_list}
+                    "message:DataSet": {"generic:Series": list() as series}
                 }
             }:
-                return self._parse_series(series_list)
+                return self._iter_series(series)
             case _:
-                raise ValueError(f"Unexpected data structure: {data}")
+                raise ValueError(self.ERR_MESSAGE % data)
 
-    def _parse_series(
+    def _iter_series(
         self, series: list[dict[str, typing.Any]]
     ) -> list[UnprocessedRate]:
-        return [self._match(s) for s in series]
+        return [self._parse(s) for s in series]
 
-    def _match(self, series: dict[str, typing.Any]) -> UnprocessedRate:
+    def _parse(self, series: dict[str, typing.Any]) -> UnprocessedRate:
         match series:
             case {
                 "generic:SeriesKey": {
@@ -101,4 +102,4 @@ class EZBUpdateStrategy:
                     date=date,
                 )
             case _:
-                raise ValueError(f"Unexpected data structure: {series}")
+                raise ValueError(self.ERR_MESSAGE % series)
