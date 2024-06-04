@@ -10,7 +10,7 @@ from results import Err, Null, Ok, Result
 
 from currency_convert.domain.agency.valueobjects.currency import Currency
 from currency_convert.domain.agency.valueobjects.money import _Decimal
-from currency_convert.domain.agency.valueobjects.rate import Rate
+from currency_convert.domain.agency.valueobjects.rate import InvalidRateError, Rate
 from currency_convert.domain.primitives.entity import AggregateRoot, EntityError
 
 if typing.TYPE_CHECKING:
@@ -88,11 +88,15 @@ class Agency(AggregateRoot):
         currency_to: str,
         rate: _Decimal,
         date: str,
-    ) -> Result[Null[None], DuplicateRateError]:
+    ) -> Result[Null[None], InvalidRateError] | Result[Rate, DuplicateRateError]:
         return (
             Rate.create(currency_from, currency_to, rate, date)
-            .and_then(Result.as_result(self.rates.append))
-            .map_err(DuplicateRateError.from_exc)
+            .and_then(
+                lambda r: Err(DuplicateRateError())
+                if any(existing_rate.date == r.date for existing_rate in self.rates)
+                else Ok(r)
+            )
+            .map(self.rates.append)
             .map(Null)
         )
 
