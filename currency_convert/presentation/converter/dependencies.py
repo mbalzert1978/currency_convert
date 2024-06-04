@@ -11,6 +11,9 @@ from sqlalchemy.orm import Session
 from currency_convert.application.agency.commands.create.handler import (
     CreateAgencyHandler,
 )
+from currency_convert.application.agency.commands.update.handler import (
+    ByNameUpdateHandler,
+)
 from currency_convert.application.agency.queries.fetch_all.handler import (
     FetchAllHandler,
 )
@@ -54,6 +57,12 @@ def get_creation_handler(
     return CreateAgencyHandler(repo)
 
 
+def get_update_handler_by_name(
+    repo: Annotated[AgencyRepository, Depends(get_agency_repository)],
+) -> ByNameUpdateHandler:
+    return ByNameUpdateHandler(repo)
+
+
 def get_all_query_handler(
     repo: Annotated[AgencyRepository, Depends(get_agency_repository)],
 ) -> FetchAllHandler:
@@ -78,3 +87,4 @@ def get_agency_update_strategy(
 CreationHandlerDep = Annotated[CommandHandler, Depends(get_creation_handler)]
 FetchAllDep = Annotated[QueryHandler, Depends(get_all_query_handler)]
 UpdateStrategyDep = Annotated[UpdateStrategy, Depends(get_agency_update_strategy)]
+UpdateHandlerByNameDep = Annotated[CommandHandler, Depends(get_update_handler_by_name)]

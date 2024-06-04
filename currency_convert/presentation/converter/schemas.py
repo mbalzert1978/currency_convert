@@ -1,8 +1,8 @@
 import decimal
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 T = TypeVar("T")
 
@@ -19,7 +19,18 @@ class Rate(BaseModel):
     currency_from: Currency
     currency_to: Currency
     rate: Money
-    iso_8601: str
+    iso_8601: str | None = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def extract_iso(cls, data: dict) -> Any:
+        try:
+            data["iso_8601"] = data.pop("date").isoformat()
+        except AttributeError as exc:
+            raise ValueError(f"Expected datetime, got {data}") from exc
+        else:
+            return data
+
 
 
 class Agency(BaseModel):
