@@ -16,15 +16,6 @@ class AgencyMapper:
         )
 
     @staticmethod
-    def _into_db_rate(rate: Rate) -> MappedRate:
-        return MappedRate(
-            currency_from=next(rate.currency_from.get_values()),
-            currency_to=next(rate.currency_to.get_values()),
-            rate=next(rate.rate.get_values()),
-            date=rate.date.isoformat(),
-        )
-
-    @staticmethod
     def from_db(mapped: MappedAgency) -> Agency:
         return Agency.from_attributes(
             mapped.id,
@@ -33,6 +24,15 @@ class AgencyMapper:
             mapped.address,
             mapped.country,
             [AgencyMapper._from_db_rate(rate) for rate in mapped.rates],
+        )
+
+    @staticmethod
+    def _into_db_rate(rate: Rate) -> MappedRate:
+        return MappedRate(
+            currency_from=next(rate.currency_from.get_values()),
+            currency_to=next(rate.currency_to.get_values()),
+            rate=next(rate.rate.get_values()),
+            date=rate.date.isoformat(),
         )
 
     @staticmethod
