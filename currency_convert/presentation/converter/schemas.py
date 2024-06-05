@@ -19,17 +19,7 @@ class Rate(BaseModel):
     currency_from: Currency
     currency_to: Currency
     rate: Money
-    iso_8601: str | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def extract_iso(cls, data: dict[str, Any]) -> Any:
-        try:
-            data["iso_8601"] = data.pop("date").isoformat()
-        except AttributeError as exc:
-            raise ValueError(f"Expected datetime, got {data}") from exc
-        else:
-            return data
+    dt: str | None = None
 
 
 class Agency(BaseModel):
@@ -47,3 +37,11 @@ class Product(BaseModel, Generic[T]):
 
 class Products(BaseModel, Generic[T]):
     data: list[T]
+    count: int = Field(default=0, init=False)
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_count(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            data["count"] = len(data.get("data", 0))
+        return data

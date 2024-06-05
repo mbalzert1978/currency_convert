@@ -12,5 +12,5 @@ class Query:
     pass
 
 
-class QueryHandler(typing.Protocol[Tco, Qcontra]):
+class QueryHandler(typing.Protocol[Qcontra, Tco]):
     def execute(self, query: Qcontra) -> Tco: ...

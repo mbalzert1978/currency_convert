@@ -18,4 +18,4 @@ class CreateAgencyHandler:
             agency = Agency.create(cmd.base, cmd.name, cmd.address, cmd.country)
             self.repository.save(agency)
             return agency
-        raise DuplicateAgencyError(agency)
+        raise DuplicateAgencyError(cmd.name)

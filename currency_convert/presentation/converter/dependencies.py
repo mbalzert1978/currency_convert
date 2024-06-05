@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Iterator, TypeVar
+from typing import Annotated, Iterator
 
 import httpx
 import xmltodict
@@ -18,7 +18,6 @@ from currency_convert.application.agency.queries.fetch_all.handler import (
     FetchAllHandler,
 )
 from currency_convert.application.primitives.command import CommandHandler
-from currency_convert.application.primitives.query import Query, QueryHandler
 from currency_convert.domain.agency.entities.interface import (
     AgencyRepository,
     UpdateStrategy,
@@ -30,10 +29,6 @@ from currency_convert.infrastructure.update_strategies.ezb.real import (
     XmlParser,
 )
 from currency_convert.presentation.config import get_app_settings
-
-Q = TypeVar("Q", bound=Query)
-T = TypeVar("T")
-E = TypeVar("E")
 
 settings, _ = get_app_settings()
 
@@ -84,7 +79,4 @@ def get_agency_update_strategy(
     return EZBUpdateStrategy(handler, parser)
 
 
-CreationHandlerDep = Annotated[CommandHandler, Depends(get_creation_handler)]
-FetchAllDep = Annotated[QueryHandler, Depends(get_all_query_handler)]
-UpdateStrategyDep = Annotated[UpdateStrategy, Depends(get_agency_update_strategy)]
 UpdateHandlerByNameDep = Annotated[CommandHandler, Depends(get_update_handler_by_name)]
