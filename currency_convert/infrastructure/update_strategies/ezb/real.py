@@ -81,11 +81,11 @@ class EZBUpdateStrategy:
                         _,
                         {
                             "@id": "CURRENCY",
-                            "@value": currency_from,
+                            "@value": currency_to,
                         },
                         {
                             "@id": "CURRENCY_DENOM",
-                            "@value": currency_to,
+                            "@value": currency_from,
                         },
                         *_,
                     ]

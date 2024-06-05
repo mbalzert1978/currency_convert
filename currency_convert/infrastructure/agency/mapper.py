@@ -40,9 +40,9 @@ class AgencyMapper:
     @staticmethod
     def _from_db_rate(mapped: dto.Rate) -> Rate:
         return Rate.from_attributes(
-            mapped.id,
-            mapped.currency_from,
-            mapped.currency_to,
-            str(mapped.rate),
-            datetime.datetime.fromisoformat(mapped.date),
+            id=mapped.id,
+            currency_from=mapped.currency_from,
+            currency_to=mapped.currency_to,
+            rate=str(mapped.rate),
+            dt=datetime.datetime.fromisoformat(mapped.date),
         )
