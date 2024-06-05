@@ -38,7 +38,7 @@ class Agency(Base):
     name: Mapped[str] = mapped_column()
     address: Mapped[str] = mapped_column()
     country: Mapped[str] = mapped_column()
-    rates: Mapped[list[Rate]] = relationship(
+    rates: Mapped[set[Rate]] = relationship(
         back_populates="agency",
         cascade="all, delete-orphan",
     )

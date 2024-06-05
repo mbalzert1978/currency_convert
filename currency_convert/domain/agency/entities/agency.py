@@ -43,7 +43,7 @@ class Agency(AggregateRoot):
     base: Currency
     address: str
     country: str
-    rates: list[Rate] = dataclasses.field(default_factory=list)
+    rates: set[Rate] = dataclasses.field(default_factory=set)
 
     @classmethod
     def from_attributes(
@@ -53,7 +53,7 @@ class Agency(AggregateRoot):
         name: str,
         address: str,
         country: str,
-        rates: list[Rate],
+        rates: set[Rate],
     ) -> typing.Self:
         return cls(
             id=uuid.UUID(id),
@@ -88,15 +88,16 @@ class Agency(AggregateRoot):
         currency_to: str,
         rate: _Decimal,
         date: str,
-    ) -> Result[Null[None], InvalidRateError] | Result[Rate, DuplicateRateError]:
+    ) -> Result[Null[None], InvalidRateError] | Result[Null[None], DuplicateRateError]:
+        def can_add_rate(rate: Rate) -> Result[Rate, DuplicateRateError]:
+            if rate not in self.rates:
+                return Ok(rate)
+            return Err(DuplicateRateError())
+
         return (
             Rate.create(currency_from, currency_to, rate, date)
-            .and_then(
-                lambda r: Err(DuplicateRateError())
-                if any(existing_rate.date == r.date for existing_rate in self.rates)
-                else Ok(r)
-            )
-            .map(self.rates.append)
+            # .and_then(can_add_rate)
+            .map(self.rates.add)
             .map(Null)
         )
 
@@ -141,7 +142,9 @@ class Agency(AggregateRoot):
             end_date: str,
         ) -> Result[Rate, Exception]:
             fn = partial(filter_on, currency, start_date, end_date)
-            return Result.from_fn(next, filter(fn, self.rates))
+            return Result.from_fn(
+                next, filter(fn, sorted(self.rates, key=lambda r: r.date, reverse=True))
+            )
 
         start_date = start_date or datetime.now().isoformat()
         end_date = end_date or datetime.now().isoformat()
@@ -167,7 +170,9 @@ class Agency(AggregateRoot):
         ).map_err(RateNotFoundError.from_exc)
 
     def get_rates(self) -> Result[tuple[Rate, ...], Exception]:
-        result: Result[tuple[Rate, ...], Exception] = Result.from_fn(tuple, self.rates)
+        result: Result[tuple[Rate, ...], Exception] = Result.from_fn(
+            tuple, sorted(self.rates, key=lambda r: r.date, reverse=True)
+        )
         return result
 
     def _is_base_currency(self, currency: str) -> bool:

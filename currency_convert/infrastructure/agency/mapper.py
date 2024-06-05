@@ -12,7 +12,7 @@ class AgencyMapper:
             name=agency.name,
             address=agency.address,
             country=agency.country,
-            rates=[AgencyMapper._into_db_rate(rate) for rate in agency.rates],
+            rates={AgencyMapper._into_db_rate(rate) for rate in agency.rates},
         )
 
     @staticmethod
@@ -23,7 +23,7 @@ class AgencyMapper:
             mapped.name,
             mapped.address,
             mapped.country,
-            [AgencyMapper._from_db_rate(rate) for rate in mapped.rates],
+            {AgencyMapper._from_db_rate(rate) for rate in mapped.rates},
         )
 
     @staticmethod

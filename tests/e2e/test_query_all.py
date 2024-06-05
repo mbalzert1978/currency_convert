@@ -8,7 +8,10 @@ from tests.data import INSERTS
 
 
 def test_query_all_rates(MemoryAgencyRepository: AgencyRepository) -> None:
-    expected = tuple(Rate.from_attributes(None, *rate.values()) for rate in INSERTS)
+    expected = tuple(
+        Rate.from_attributes(None, *rate.values())
+        for rate in sorted(INSERTS, key=lambda x: x["date"], reverse=True)
+    )
     cmd = FetchAll("EZB")
     handler = FetchAllHandler(MemoryAgencyRepository)
     result = handler.execute(cmd)
