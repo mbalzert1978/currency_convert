@@ -10,11 +10,7 @@ from currency_convert.domain.primitives.valueobject import ValueObject, ValueObj
 T = typing.TypeVar("T")
 
 
-class CurrencyError(ValueObjectError):
-    """Base class for errors related to Currency."""
-
-
-class InvalidCurrencyError(CurrencyError):
+class InvalidCurrencyError(ValueObjectError):
     """Error raised when an invalid currency is provided."""
 
 

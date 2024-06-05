@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from decimal import Decimal
 
 from sqlalchemy import ForeignKey, MetaData
@@ -26,7 +27,7 @@ class Rate(Base):
     currency_from: Mapped[str] = mapped_column()
     currency_to: Mapped[str] = mapped_column()
     rate: Mapped[Decimal] = mapped_column()
-    date: Mapped[str] = mapped_column()
+    date: Mapped[datetime.datetime] = mapped_column()
     agency_id: Mapped[str] = mapped_column(ForeignKey("agencies.id"))
     agency: Mapped[Agency] = relationship(back_populates="rates")
 

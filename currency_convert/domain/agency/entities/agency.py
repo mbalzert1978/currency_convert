@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import typing
 import uuid
-from datetime import datetime
 from functools import partial
 
 from results import Err, Null, Ok, Result
@@ -88,15 +88,11 @@ class Agency(AggregateRoot):
         currency_to: str,
         rate: _Decimal,
         date: str,
-    ) -> Result[Null[None], InvalidRateError] | Result[Null[None], DuplicateRateError]:
-        def can_add_rate(rate: Rate) -> Result[Rate, DuplicateRateError]:
-            if rate not in self.rates:
-                return Ok(rate)
-            return Err(DuplicateRateError())
-
+    ) -> Result[Null[None], InvalidRateError]:
         return (
-            Rate.create(currency_from, currency_to, rate, date)
-            # .and_then(can_add_rate)
+            Result.from_fn(datetime.datetime.fromisoformat, date)
+            .map_err(InvalidRateError.from_exc)
+            .and_then(partial(Rate.create, currency_from, currency_to, rate))
             .map(self.rates.add)
             .map(Null)
         )
@@ -122,58 +118,65 @@ class Agency(AggregateRoot):
         self,
         currency_from: str,
         currency_to: str,
-        start_date: str | None = None,
-        end_date: str | None = None,
+        dt: datetime.datetime | None = None,
     ) -> Result[Rate, RateNotFoundError]:
-        def filter_on(
-            currency: str,
-            start_date: str,
-            end_date: str,
-            r: Rate,
-        ) -> bool:
-            return (
-                r.currency_to == currency
-                and start_date <= r.date.isoformat() <= end_date
-            )
+        def filter_on_base_currency(r: Rate) -> bool:
+            return r.currency_to == currency_to and (dt is None or dt == r.dt)
 
-        def fetch_one(
-            currency: str,
-            start_date: str,
-            end_date: str,
-        ) -> Result[Rate, Exception]:
-            fn = partial(filter_on, currency, start_date, end_date)
-            return Result.from_fn(
-                next, filter(fn, sorted(self.rates, key=lambda r: r.date, reverse=True))
-            )
-
-        start_date = start_date or datetime.now().isoformat()
-        end_date = end_date or datetime.now().isoformat()
+        def filter_on_inverted_currency(r: Rate) -> bool:
+            return r.currency_to == currency_from and (dt is None or dt == r.dt)
 
         if self._is_base_currency(currency_from):
-            return fetch_one(currency_to, start_date, end_date).map_err(
-                RateNotFoundError.from_exc
+            return (
+                self.get_rates(filter_on_base_currency)
+                .map(iter)
+                .and_then(
+                    lambda iter: Result.from_fn(next, iter).map_err(
+                        RateNotFoundError.from_exc
+                    )
+                )
             )
         if self._is_base_currency(currency_to):
             return (
-                fetch_one(currency_from, start_date, end_date)
-                .and_then(Rate.invert)  # type: ignore[arg-type]
-                .map_err(RateNotFoundError.from_exc)
+                self.get_rates(filter_on_inverted_currency)
+                .map(iter)
+                .and_then(
+                    lambda iter: Result.from_fn(next, iter).map_err(
+                        RateNotFoundError.from_exc
+                    )
+                )
+                .and_then(Rate.invert)
             )
+
         return (
-            fetch_one(currency_from, start_date, end_date)
-            .and_then(Rate.invert)  # type: ignore[arg-type]
+            self.get_rates(filter_on_inverted_currency)
+            .map(iter)
             .and_then(
-                lambda rf: fetch_one(currency_to, start_date, end_date).and_then(
-                    partial(Rate.multiply, other=rf)  # type: ignore[arg-type]
+                lambda iter: Result.from_fn(next, iter).map_err(
+                    RateNotFoundError.from_exc
                 )
             )
-        ).map_err(RateNotFoundError.from_exc)
-
-    def get_rates(self) -> Result[tuple[Rate, ...], Exception]:
-        result: Result[tuple[Rate, ...], Exception] = Result.from_fn(
-            tuple, sorted(self.rates, key=lambda r: r.date, reverse=True)
+            .and_then(Rate.invert)
+            .and_then(
+                lambda rf: self.get_rates(filter_on_base_currency)
+                .map(iter)
+                .and_then(
+                    lambda iter: Result.from_fn(next, iter).map_err(
+                        RateNotFoundError.from_exc
+                    )
+                )
+                .and_then(partial(Rate.multiply, other=rf))
+            )
         )
-        return result
+
+    def get_rates(
+        self,
+        predicate: typing.Callable[[Rate], bool] = lambda r: True,
+    ) -> Result[tuple[Rate, ...], RateNotFoundError]:
+        return Result.from_fn(
+            tuple,
+            filter(predicate, sorted(self.rates, key=lambda r: r.dt, reverse=True)),
+        ).map_err(RateNotFoundError.from_exc)
 
     def _is_base_currency(self, currency: str) -> bool:
         return currency == self.base
