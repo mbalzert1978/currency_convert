@@ -1,6 +1,6 @@
 import decimal
-from typing import Any, Generic, TypeVar
 import uuid
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -21,16 +21,15 @@ class Rate(BaseModel):
     rate: Money
     iso_8601: str | None = None
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
-    def extract_iso(cls, data: dict) -> Any:
+    def extract_iso(cls, data: dict[str, Any]) -> Any:
         try:
             data["iso_8601"] = data.pop("date").isoformat()
         except AttributeError as exc:
             raise ValueError(f"Expected datetime, got {data}") from exc
         else:
             return data
-
 
 
 class Agency(BaseModel):

@@ -35,7 +35,7 @@ Q = TypeVar("Q", bound=Query)
 T = TypeVar("T")
 E = TypeVar("E")
 
-settings, _ = get_app_settings()  # type: ignore [call-arg]
+settings, _ = get_app_settings()
 
 engine = create_engine(str(settings.DATABASE_URL))
 
@@ -48,7 +48,7 @@ def get_db() -> Iterator[Session]:
 def get_agency_repository(
     session: Annotated[Session, Depends(get_db)],
 ) -> AgencyRepository:
-    return AgencyRepo(session)  # type: ignore [no-any-return]
+    return AgencyRepo(session)
 
 
 def get_creation_handler(
@@ -70,7 +70,7 @@ def get_all_query_handler(
 
 
 def get_xml_parser() -> XmlParser:
-    return xmltodict  # type: ignore [no-any-return]
+    return xmltodict  # type: ignore [return-value]
 
 
 def get_request_handler() -> RequestHandler:

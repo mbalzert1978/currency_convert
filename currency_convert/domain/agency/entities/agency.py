@@ -4,13 +4,9 @@ import dataclasses
 import datetime
 import typing
 import uuid
-from functools import partial
-
-from results import Err, Null, Ok, Result
 
 from currency_convert.domain.agency.valueobjects.currency import Currency
-from currency_convert.domain.agency.valueobjects.money import _Decimal
-from currency_convert.domain.agency.valueobjects.rate import InvalidRateError, Rate
+from currency_convert.domain.agency.valueobjects.rate import Rate
 from currency_convert.domain.primitives.entity import AggregateRoot, EntityError
 
 if typing.TYPE_CHECKING:
@@ -21,8 +17,16 @@ class AgencyCreationError(EntityError):
     """Error raised when an agency cannot be created."""
 
 
+class AgencySaveError(EntityError):
+    """Error raised when an agency cannot be saved."""
+
+
 class AgencyNotFoundError(EntityError):
     """Error raised when an agency is not found."""
+
+
+class DuplicateAgencyError(EntityError):
+    """Error raised when an agency with the same name already exists."""
 
 
 class DuplicateRateError(EntityError):
@@ -35,6 +39,10 @@ class RateNotFoundError(EntityError):
 
 class UpdateError(EntityError):
     """Error raised when an agency cannot be updated."""
+
+
+class RepositoryError(EntityError):
+    """Base class for errors related to AgencyRepository."""
 
 
 @dataclasses.dataclass(slots=True, eq=False)
@@ -57,7 +65,7 @@ class Agency(AggregateRoot):
     ) -> typing.Self:
         return cls(
             id=uuid.UUID(id),
-            base=Currency.create(base).unwrap(),
+            base=Currency.from_str(base),
             name=name,
             address=address,
             country=country,
@@ -65,61 +73,41 @@ class Agency(AggregateRoot):
         )
 
     @classmethod
-    def create(
-        cls, base: str, name: str, address: str, country: str
-    ) -> Result[Agency, AgencyCreationError]:
-        return (
-            Currency.create(base)
-            .map(
-                lambda base: cls(
-                    id=uuid.uuid4(),
-                    base=base,
-                    name=name,
-                    address=address,
-                    country=country,
-                )
-            )
-            .map_err(AgencyCreationError.from_exc)
+    def create(cls, base: str, name: str, address: str, country: str) -> Agency:
+        return cls(
+            id=uuid.uuid4(),
+            base=Currency.from_str(base),
+            name=name,
+            address=address,
+            country=country,
         )
 
     def add_rate(
         self,
         currency_from: str,
         currency_to: str,
-        rate: _Decimal,
+        rate: str,
         date: str,
-    ) -> Result[Null[None], InvalidRateError]:
-        return (
-            Result.from_fn(datetime.datetime.fromisoformat, date)
-            .map_err(InvalidRateError.from_exc)
-            .and_then(partial(Rate.create, currency_from, currency_to, rate))
-            .map(self.rates.add)
-            .map(Null)
+    ) -> None:
+        self.rates.add(
+            Rate.create(
+                currency_from=currency_from,
+                currency_to=currency_to,
+                rate=rate,
+                dt=datetime.datetime.fromisoformat(date),
+            )
         )
 
-    def update(
-        self,
-        rate_strategy: UpdateStrategy,
-    ) -> Result[Agency, UpdateError]:
+    def update(self, rate_strategy: UpdateStrategy) -> None:
         for rate in rate_strategy():
-            match self.add_rate(
-                rate["currency_from"],
-                rate["currency_to"],
-                rate["rate"],
-                rate["date"],
-            ):
-                case Ok(_):
-                    continue
-                case Err(exc):
-                    return Err(UpdateError.from_exc(exc))
-        return Ok(self)
+            self.add_rate(**rate)
 
     def get_rate(
         self,
         currency_from: str,
         currency_to: str,
         dt: datetime.datetime | None = None,
-    ) -> Result[Rate, RateNotFoundError]:
+    ) -> Rate:
         def filter_on_base_currency(r: Rate) -> bool:
             return r.currency_to == currency_to and (dt is None or dt == r.dt)
 
@@ -127,56 +115,30 @@ class Agency(AggregateRoot):
             return r.currency_to == currency_from and (dt is None or dt == r.dt)
 
         if self._is_base_currency(currency_from):
-            return (
-                self.get_rates(filter_on_base_currency)
-                .map(iter)
-                .and_then(
-                    lambda iter: Result.from_fn(next, iter).map_err(
-                        RateNotFoundError.from_exc
-                    )
-                )
-            )
+            try:
+                return next(iter(self.get_rates(filter_on_base_currency)))
+            except StopIteration:
+                raise RateNotFoundError("No rate with the given criteria found.")
         if self._is_base_currency(currency_to):
-            return (
-                self.get_rates(filter_on_inverted_currency)
-                .map(iter)
-                .and_then(
-                    lambda iter: Result.from_fn(next, iter).map_err(
-                        RateNotFoundError.from_exc
-                    )
-                )
-                .and_then(Rate.invert)
-            )
+            try:
+                return next(iter(self.get_rates(filter_on_inverted_currency))).invert()
+            except StopIteration:
+                raise RateNotFoundError("No rate with the given criteria found.")
 
-        return (
-            self.get_rates(filter_on_inverted_currency)
-            .map(iter)
-            .and_then(
-                lambda iter: Result.from_fn(next, iter).map_err(
-                    RateNotFoundError.from_exc
-                )
+        try:
+            return next(iter(self.get_rates(filter_on_base_currency))).multiply(
+                next(iter(self.get_rates(filter_on_inverted_currency))).invert()
             )
-            .and_then(Rate.invert)
-            .and_then(
-                lambda rf: self.get_rates(filter_on_base_currency)
-                .map(iter)
-                .and_then(
-                    lambda iter: Result.from_fn(next, iter).map_err(
-                        RateNotFoundError.from_exc
-                    )
-                )
-                .and_then(partial(Rate.multiply, other=rf))
-            )
-        )
+        except StopIteration:
+            raise RateNotFoundError("No rate with the given criteria found.")
 
     def get_rates(
         self,
-        predicate: typing.Callable[[Rate], bool] = lambda r: True,
-    ) -> Result[tuple[Rate, ...], RateNotFoundError]:
-        return Result.from_fn(
-            tuple,
+        predicate: typing.Callable[[Rate], bool] = lambda _: True,
+    ) -> tuple[Rate, ...]:
+        return tuple(
             filter(predicate, sorted(self.rates, key=lambda r: r.dt, reverse=True)),
-        ).map_err(RateNotFoundError.from_exc)
+        )
 
     def _is_base_currency(self, currency: str) -> bool:
         return currency == self.base

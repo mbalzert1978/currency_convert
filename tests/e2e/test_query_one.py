@@ -1,3 +1,5 @@
+import datetime
+
 from currency_convert.application.agency.queries.fetch_one.handler import (
     FetchOneHandler,
 )
@@ -8,9 +10,12 @@ from tests.data import INSERTS
 
 
 def test_query_one_rate(MemoryAgencyRepository: AgencyRepository) -> None:
-    expected = Rate.from_attributes(None, *INSERTS[0].values())
-    cmd = FetchOne("EZB", "EUR", "USD", "2020-01-01T00:00:00")
+    expected = Rate.create(
+        currency_from=INSERTS[0]["currency_from"],
+        currency_to=INSERTS[0]["currency_to"],
+        rate=INSERTS[0]["rate"],
+        dt=(to_get := datetime.datetime.fromisoformat(INSERTS[0]["date"])),
+    )
+    cmd = FetchOne("EZB", "EUR", "USD", to_get)
     handler = FetchOneHandler(MemoryAgencyRepository)
-    result = handler.execute(cmd)
-    assert result.is_ok()
-    assert result.unwrap() == expected
+    assert handler.execute(cmd) == expected

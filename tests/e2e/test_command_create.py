@@ -9,8 +9,7 @@ def test_create_agency_command(EmptyAgencyRepository: AgencyRepository) -> None:
     cmd = CreateAgency("test", "foo", "bar", "baz")
     handler = CreateAgencyHandler(EmptyAgencyRepository)
 
-    result = handler.execute(cmd)
+    handler.execute(cmd)
 
-    in_db = EmptyAgencyRepository.find_by_name("test").unwrap()
-    assert result.is_ok()
+    in_db = EmptyAgencyRepository.find_by_name("test")
     assert len(in_db.rates) == 0

@@ -1,3 +1,5 @@
+import datetime
+
 from currency_convert.application.agency.queries.fetch_all.command import FetchAll
 from currency_convert.application.agency.queries.fetch_all.handler import (
     FetchAllHandler,
@@ -9,11 +11,16 @@ from tests.data import INSERTS
 
 def test_query_all_rates(MemoryAgencyRepository: AgencyRepository) -> None:
     expected = tuple(
-        Rate.from_attributes(None, *rate.values())
+        Rate.create(
+            currency_from=rate["currency_from"],
+            currency_to=rate["currency_to"],
+            rate=rate["rate"],
+            dt=datetime.datetime.fromisoformat(rate["date"]),
+        )
         for rate in sorted(INSERTS, key=lambda x: x["date"], reverse=True)
     )
+
     cmd = FetchAll("EZB")
     handler = FetchAllHandler(MemoryAgencyRepository)
-    result = handler.execute(cmd)
-    assert result.is_ok()
-    assert result.unwrap() == expected
+
+    assert handler.execute(cmd) == expected

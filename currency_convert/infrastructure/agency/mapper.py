@@ -32,7 +32,7 @@ class AgencyMapper:
             currency_from=next(rate.currency_from.get_values()),
             currency_to=next(rate.currency_to.get_values()),
             rate=next(rate.rate.get_values()),
-            date=rate.dt.isoformat(),
+            date=rate.dt,
         )
 
     @staticmethod
@@ -41,6 +41,6 @@ class AgencyMapper:
             mapped.id,
             mapped.currency_from,
             mapped.currency_to,
-            mapped.rate,
+            str(mapped.rate),
             mapped.date,
         )

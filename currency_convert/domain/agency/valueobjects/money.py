@@ -5,11 +5,7 @@ import decimal
 import typing
 from typing import Iterator
 
-from results import Result
-
 from currency_convert.domain.primitives.valueobject import ValueObject, ValueObjectError
-
-_Decimal = decimal.Decimal | float | str | tuple[int, typing.Sequence[int], int]
 
 
 class MoneyError(ValueObjectError):
@@ -34,24 +30,22 @@ class Money(ValueObject[decimal.Decimal]):
         yield self.amount
 
     @classmethod
-    def create(
-        cls, value: _Decimal
-    ) -> Result[typing.Self, FormatError | NegativeError]:
+    def from_str(cls, value: str) -> typing.Self:
         try:
             v = decimal.Decimal(value).quantize(cls.PRECISION)
         except decimal.DecimalException as exc:
-            return Result.Err(FormatError.from_exc(exc))
+            raise FormatError.from_exc(exc)
         else:
             if cls.is_positive(v):
-                return Result.Ok(cls(amount=v))
-            return Result.Err(NegativeError(cls.ERROR_MSG.format(value=value)))
+                return cls(amount=v)
+            raise NegativeError(cls.ERROR_MSG.format(value=value))
 
     @classmethod
     def is_positive(cls, value: decimal.Decimal) -> bool:
         return value > decimal.Decimal(0)
 
-    def invert(self) -> _Decimal:
-        return 1 / self.amount
+    def invert(self) -> str:
+        return str(1 / self.amount)
 
-    def multiply(self, other: Money) -> _Decimal:
-        return self.amount * other.amount
+    def multiply(self, other: Money) -> str:
+        return str(self.amount * other.amount)

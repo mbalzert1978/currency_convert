@@ -1,11 +1,9 @@
 from __future__ import annotations
+
 import dataclasses
 import typing
 
-from results import Result
-
-T = typing.TypeVar("T")
-E = typing.TypeVar("E")
+Tco = typing.TypeVar("Tco", covariant=True)
 Qcontra = typing.TypeVar("Qcontra", bound="Query", contravariant=True)
 
 
@@ -14,5 +12,5 @@ class Query:
     pass
 
 
-class QueryHandler(typing.Protocol[Qcontra, T, E]):
-    def execute(self, query: Qcontra) -> Result[T, E]: ...
+class QueryHandler(typing.Protocol[Tco, Qcontra]):
+    def execute(self, query: Qcontra) -> Tco: ...
