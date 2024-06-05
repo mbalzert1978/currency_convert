@@ -1,7 +1,10 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
-from currency_convert.domain.agency.entities.agency import Agency
+
+from currency_convert.domain.agency.entities.agency import Agency, AgencySaveError
 from currency_convert.infrastructure.agency.repository import AgencyRepo
 
 
@@ -18,15 +21,20 @@ def agency() -> Agency:
         base="USD",
         address="https://test.com",
         country="Test Country",
-    ).unwrap()
+    )
 
 
 @pytest.mark.parametrize(
     "mock_into_db_side_effect, mock_merge_side_effect, mock_commit_side_effect, expected_error",
     [
-        (Exception("Into DB error"), None, None, "Into DB error"),
-        (None, Exception("Merge error"), None, "Merge error"),
-        (None, None, Exception("Commit error"), "Commit error"),
+        (
+            SQLAlchemyError("Into DB error"),
+            None,
+            None,
+            AgencySaveError,
+        ),
+        (None, SQLAlchemyError("Merge error"), None, AgencySaveError),
+        (None, None, SQLAlchemyError("Commit error"), AgencySaveError),
     ],
     ids=[
         "save_when_into_db_fails_should_roll_back_and_return_error",
@@ -49,8 +57,7 @@ def test_save_when_error_occurs_should__roll_back_and_return_error(
     session.merge.side_effect = mock_merge_side_effect
     session.commit.side_effect = mock_commit_side_effect
 
-    result = repo.save(agency)
+    with pytest.raises(expected_error):
+        repo.save(agency)
 
-    assert result.is_err()
-    assert str(result.unwrap_err()) == expected_error
     session.rollback.assert_called_once()

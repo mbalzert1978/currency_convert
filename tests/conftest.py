@@ -10,7 +10,7 @@ from currency_convert.application.agency.commands.create.command import CreateAg
 from currency_convert.application.agency.commands.create.handler import (
     CreateAgencyHandler,
 )
-from currency_convert.application.agency.commands.update.command import UpdatebyName
+from currency_convert.application.agency.commands.update.command import UpdateByName
 from currency_convert.application.agency.commands.update.handler import (
     ByNameUpdateHandler,
 )
@@ -59,7 +59,7 @@ def EmptyAgencyRepository(SessionFactory: Callable[[], Session]) -> AgencyRepo:
 def MemoryAgencyRepository(
     EmptyAgencyRepository: AgencyRepo, MemoryStrategy: MemoryUpdateStrategy
 ) -> AgencyRepo:
-    cmd = UpdatebyName(MemoryStrategy, "EZB")
+    cmd = UpdateByName(MemoryStrategy, "EZB")
     handler = ByNameUpdateHandler(EmptyAgencyRepository)
     handler.execute(cmd)
     return EmptyAgencyRepository

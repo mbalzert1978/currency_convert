@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 
 from currency_convert.application.primitives.query import Query
 
@@ -8,4 +9,4 @@ class FetchOne(Query):
     agency_name: str
     currency_from: str
     currency_to: str
-    iso_date: str
+    dt: datetime.datetime

@@ -15,3 +15,9 @@ events:
     update rates
     get rate
     list rates
+
+refactor the tests  
+separate error tests from creational tests
+use parametrized and ids where ids and fn name follow this schema:
+unit under test name_when_xshould_y
+where x is the given detailed testing context and y is the expected result in detail

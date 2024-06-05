@@ -3,8 +3,6 @@ from __future__ import annotations
 import dataclasses
 import typing
 
-from results import Result
-
 from currency_convert.domain.primitives.valueobject import ValueObject, ValueObjectError
 
 T = typing.TypeVar("T")
@@ -27,10 +25,10 @@ class Currency(ValueObject[str]):
         return isinstance(other, (str, Currency)) and self.code == other
 
     @classmethod
-    def create(cls, code: str) -> Result[typing.Self, InvalidCurrencyError]:
-        if cls.has_valid_length(code):
-            return Result.Ok(cls(code=code))
-        return Result.Err(InvalidCurrencyError(cls.ERROR_MSG.format(code=code)))
+    def from_str(cls, value: str) -> typing.Self:
+        if cls.has_valid_length(value) and value.isalpha():
+            return cls(code=value)
+        raise InvalidCurrencyError(cls.ERROR_MSG.format(code=value))
 
     @classmethod
     def has_valid_length(cls, code: typing.Sized) -> bool:

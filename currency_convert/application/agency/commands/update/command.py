@@ -10,10 +10,10 @@ class Update(Command):
 
 
 @dataclasses.dataclass(frozen=True)
-class UpdatebyName(Update):
+class UpdateByName(Update):
     name: str
 
 
 @dataclasses.dataclass(frozen=True)
-class UpdatebyId(Update):
+class UpdateById(Update):
     id: str

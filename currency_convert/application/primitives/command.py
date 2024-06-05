@@ -1,10 +1,8 @@
 import dataclasses
 import typing
 
-from results import Result
-
-T = typing.TypeVar("T")
-E = typing.TypeVar("E")
+Tco = typing.TypeVar("Tco", covariant=True)
+Ccontra = typing.TypeVar("Ccontra", bound="Command", contravariant=True)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -12,5 +10,5 @@ class Command:
     pass
 
 
-class CommandHandler(typing.Protocol[T, E]):
-    def execute(self, q: Command) -> Result[T, E]: ...
+class CommandHandler(typing.Protocol[Ccontra, Tco]):
+    def execute(self, q: Ccontra) -> Tco: ...
