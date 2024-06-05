@@ -22,6 +22,11 @@ class ValueObject(abc.ABC, typing.Generic[T]):
         raise NotImplementedError
 
     def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            try:
+                return next(self.get_values()) == other
+            except Exception:
+                return False
         return isinstance(other, type(self)) and self._equals(other)
 
     def _equals(self, other: ValueObject[T]) -> bool:

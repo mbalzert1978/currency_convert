@@ -11,4 +11,4 @@ class FetchAllHandler:
     def execute(self, query: FetchAll) -> tuple[Rate, ...]:
         if (agency := self.repository.find_by_name(query.agency_name)) is None:
             raise AgencyNotFoundError()
-        return agency.get_rates()
+        return agency.get_rates(query.predicate)

@@ -1,3 +1,5 @@
+import datetime
+
 from currency_convert.domain.agency.entities.agency import Agency
 from currency_convert.domain.agency.valueobjects.rate import Rate
 from currency_convert.infrastructure.agency import dto
@@ -42,5 +44,5 @@ class AgencyMapper:
             mapped.currency_from,
             mapped.currency_to,
             str(mapped.rate),
-            mapped.date,
+            datetime.datetime.fromisoformat(mapped.date),
         )

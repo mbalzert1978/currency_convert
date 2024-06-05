@@ -160,6 +160,7 @@ def test_get_rate_when_no_base_should_calculate_rate(agency: Agency) -> None:
 
 def test_get_rate_when_base_should_return_rate(agency: Agency) -> None:
     agency.add_rate("USD", "JPY", "110.00", "2023-10-01T00:00:00")
+    agency.add_rate("USD", "JPY", "100.00", "2023-09-20T00:00:00")
     agency.add_rate("JPY", "EUR", "0.0075", "2023-10-01T00:00:00")
     rate = agency.get_rate("USD", "JPY")
     expected_rate = Money.from_str("110.00")

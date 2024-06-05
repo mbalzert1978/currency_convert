@@ -17,6 +17,9 @@ from currency_convert.application.agency.commands.update.handler import (
 from currency_convert.application.agency.queries.fetch_all.handler import (
     FetchAllHandler,
 )
+from currency_convert.application.agency.queries.fetch_one.handler import (
+    FetchOneHandler,
+)
 from currency_convert.application.primitives.command import CommandHandler
 from currency_convert.domain.agency.entities.interface import (
     AgencyRepository,
@@ -58,6 +61,12 @@ def get_update_handler_by_name(
     return ByNameUpdateHandler(repo)
 
 
+def get_one_query_handler(
+    repo: Annotated[AgencyRepository, Depends(get_agency_repository)],
+) -> FetchOneHandler:
+    return FetchOneHandler(repo)
+
+
 def get_all_query_handler(
     repo: Annotated[AgencyRepository, Depends(get_agency_repository)],
 ) -> FetchAllHandler:
@@ -77,6 +86,3 @@ def get_agency_update_strategy(
     parser: Annotated[XmlParser, Depends(get_xml_parser)],
 ) -> UpdateStrategy:
     return EZBUpdateStrategy(handler, parser)
-
-
-UpdateHandlerByNameDep = Annotated[CommandHandler, Depends(get_update_handler_by_name)]

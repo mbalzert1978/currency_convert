@@ -1,3 +1,4 @@
+import datetime
 import decimal
 import uuid
 from typing import Any, Generic, TypeVar
@@ -19,7 +20,7 @@ class Rate(BaseModel):
     currency_from: Currency
     currency_to: Currency
     rate: Money
-    dt: str | None = None
+    dt: datetime.datetime
 
 
 class Agency(BaseModel):

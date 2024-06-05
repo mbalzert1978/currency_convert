@@ -1,12 +1,14 @@
+import datetime
 import logging
 from dataclasses import asdict
-from typing import Annotated, Literal
+from typing import Annotated, Callable, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from currency_convert.application.agency.commands.create.command import CreateAgency
 from currency_convert.application.agency.commands.update.command import UpdateByName
 from currency_convert.application.agency.queries.fetch_all.command import FetchAll
+from currency_convert.application.agency.queries.fetch_one.query import FetchOne
 from currency_convert.application.primitives.command import CommandHandler
 from currency_convert.application.primitives.query import QueryHandler
 from currency_convert.domain.agency import valueobjects
@@ -22,6 +24,7 @@ from currency_convert.presentation.converter.dependencies import (
     get_agency_update_strategy,
     get_all_query_handler,
     get_creation_handler,
+    get_one_query_handler,
     get_update_handler_by_name,
 )
 
@@ -86,8 +89,20 @@ def api_get_rates(
         QueryHandler[FetchAll, tuple[valueobjects.Rate, ...]],
         Depends(get_all_query_handler),
     ],
+    currency_from: str | None = None,
+    currency_to: str | None = None,
+    dt: datetime.datetime | None = None,
 ) -> schemas.Products[schemas.Rate]:
-    cmd = FetchAll(agency_name=agency_name)
+    def predicate(rate: valueobjects.Rate) -> bool:
+        if currency_from and rate.currency_from != currency_from:
+            return False
+        if currency_to and rate.currency_to != currency_to:
+            return False
+        if dt and rate.dt != dt:
+            return False
+        return True
+
+    cmd = FetchAll(agency_name=agency_name, predicate=predicate)
     try:
         rates = handler.execute(cmd)
     except AgencyNotFoundError as exc:
@@ -98,3 +113,32 @@ def api_get_rates(
         raise HTTPException(status_code=500, detail="Internal server error.") from e
     else:
         return schemas.Products(data=[schemas.Rate(**asdict(rate)) for rate in rates])
+
+
+@router.get("/{agency_name}/rate", response_model=schemas.Product[schemas.Rate])
+def api_get_rate(
+    agency_name: str,
+    currency_from: str,
+    currency_to: str,
+    handler: Annotated[
+        QueryHandler[FetchOne, valueobjects.Rate],
+        Depends(get_one_query_handler),
+    ],
+    dt: datetime.datetime | None = None,
+) -> schemas.Product[schemas.Rate]:
+    cmd = FetchOne(
+        agency_name=agency_name,
+        currency_from=currency_from,
+        currency_to=currency_to,
+        dt=dt,
+    )
+    try:
+        rate = handler.execute(cmd)
+    except AgencyNotFoundError as exc:
+        _logger.exception(exc)
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as e:
+        _logger.critical("Unreachable code path.")
+        raise HTTPException(status_code=500, detail="Internal server error.") from e
+    else:
+        return schemas.Product(data=schemas.Rate(**asdict(rate)))

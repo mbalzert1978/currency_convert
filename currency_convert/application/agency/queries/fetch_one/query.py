@@ -9,4 +9,4 @@ class FetchOne(Query):
     agency_name: str
     currency_from: str
     currency_to: str
-    dt: datetime.datetime
+    dt: datetime.datetime | None = None
