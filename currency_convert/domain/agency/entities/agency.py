@@ -89,14 +89,13 @@ class Agency(AggregateRoot):
         rate: str,
         date: str,
     ) -> None:
-        self.rates.add(
-            Rate.create(
-                currency_from=currency_from,
-                currency_to=currency_to,
-                rate=rate,
-                dt=datetime.datetime.fromisoformat(date),
-            )
+        new_rate = Rate.create(
+            currency_from=currency_from,
+            currency_to=currency_to,
+            rate=rate,
+            dt=datetime.datetime.fromisoformat(date),
         )
+        self.rates.add(new_rate)
 
     def update(self, rate_strategy: UpdateStrategy) -> None:
         for rate in rate_strategy():
@@ -127,13 +126,12 @@ class Agency(AggregateRoot):
             msg = "No rate with the given criteria found."
             raise RateNotFoundError(msg)
 
+    def _is_base_currency(self, currency: str) -> bool:
+        return currency == self.base
+
     def get_rates(
         self,
         predicate: typing.Callable[[Rate], bool] = lambda _: True,
     ) -> tuple[Rate, ...]:
-        return tuple(
-            filter(predicate, sorted(self.rates, key=lambda r: r.dt, reverse=True)),
-        )
-
-    def _is_base_currency(self, currency: str) -> bool:
-        return currency == self.base
+        sorted_rates = sorted(self.rates, key=lambda r: r.dt, reverse=True)
+        return tuple(filter(predicate, sorted_rates))

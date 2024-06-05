@@ -16,7 +16,7 @@ class InvalidCurrencyError(ValueObjectError):
 class Currency(ValueObject[str]):
     VALID_LENGTH: typing.ClassVar[int] = 3
     ERROR_MSG: typing.ClassVar[str] = (
-        f"Currency code must be {VALID_LENGTH} characters long. Got: {{code}}"
+        f"Currency code must be {VALID_LENGTH} characters long. Got: {{value}}"
     )
 
     code: str
@@ -28,7 +28,7 @@ class Currency(ValueObject[str]):
     def from_str(cls, value: str) -> typing.Self:
         if cls.has_valid_length(value) and value.isalpha():
             return cls(code=value)
-        raise InvalidCurrencyError(cls.ERROR_MSG.format(code=value))
+        raise InvalidCurrencyError(cls.ERROR_MSG.format(value=value))
 
     @classmethod
     def has_valid_length(cls, code: typing.Sized) -> bool:
