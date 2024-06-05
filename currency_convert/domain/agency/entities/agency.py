@@ -114,23 +114,18 @@ class Agency(AggregateRoot):
         def filter_on_inverted_currency(r: Rate) -> bool:
             return r.currency_to == currency_from and (dt is None or dt == r.dt)
 
-        if self._is_base_currency(currency_from):
-            try:
-                return next(iter(self.get_rates(filter_on_base_currency)))
-            except StopIteration:
-                raise RateNotFoundError("No rate with the given criteria found.")
-        if self._is_base_currency(currency_to):
-            try:
-                return next(iter(self.get_rates(filter_on_inverted_currency))).invert()
-            except StopIteration:
-                raise RateNotFoundError("No rate with the given criteria found.")
-
         try:
+            if self._is_base_currency(currency_from):
+                return next(iter(self.get_rates(filter_on_base_currency)))
+            if self._is_base_currency(currency_to):
+                return next(iter(self.get_rates(filter_on_inverted_currency))).invert()
+
             return next(iter(self.get_rates(filter_on_base_currency))).multiply(
                 next(iter(self.get_rates(filter_on_inverted_currency))).invert()
             )
         except StopIteration:
-            raise RateNotFoundError("No rate with the given criteria found.")
+            msg = "No rate with the given criteria found."
+            raise RateNotFoundError(msg)
 
     def get_rates(
         self,
