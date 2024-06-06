@@ -39,10 +39,18 @@ class AgencyMapper:
 
     @staticmethod
     def _from_db_rate(mapped: dto.Rate) -> Rate:
+        match mapped.date:
+            case datetime.datetime():
+                date = mapped.date
+            case str(iso_str):
+                date = datetime.datetime.fromisoformat(iso_str)
+            case _:
+                err = "Invalid date type from dto: %s" % mapped
+                raise ValueError(err)
         return Rate.from_attributes(
             id=mapped.id,
             currency_from=mapped.currency_from,
             currency_to=mapped.currency_to,
             rate=str(mapped.rate),
-            dt=datetime.datetime.fromisoformat(mapped.date),
+            dt=date,
         )

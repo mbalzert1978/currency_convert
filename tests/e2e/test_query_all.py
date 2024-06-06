@@ -20,7 +20,7 @@ def test_query_all_rates(MemoryAgencyRepository: AgencyRepository) -> None:
         for rate in sorted(INSERTS, key=lambda x: x["date"], reverse=True)
     )
 
-    cmd = FetchAll("EZB")
+    cmd = FetchAll("EZB", lambda _: True)
     handler = FetchAllHandler(MemoryAgencyRepository)
 
     assert handler.execute(cmd) == expected
